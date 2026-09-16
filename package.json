@@ -1,0 +1,13 @@
+{
+  "name": "pitch-scope",
+  "version": "1.0.0",
+  "description": "Pitch-correction inspector for vocal stems. Static, client-side, no upload.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "python3 -m http.server 8173",
+    "test": "node test/dsp.test.js",
+    "test:browser": "node test/browser.test.js",
+    "fixtures": "node test/make-fixtures.js"
+  }
+}

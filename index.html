@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pitch Scope: pitch-correction inspector for vocal stems</title>
+<link rel="stylesheet" href="app.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='13'>🎚️</text></svg>">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true"></span>
+    <h1>Pitch&nbsp;Scope</h1>
+  </div>
+
+  <div class="tracks-strip" id="tracksStrip"></div>
+
+  <div class="topbar-actions">
+    <button id="btnOpenA" class="btn btn-primary">Open vocal<kbd>O</kbd></button>
+    <button id="btnOpenB" class="btn adv-only">Add comparison<kbd>⇧O</kbd></button>
+    <button id="btnAdvanced" class="btn btn-ghost" aria-pressed="false">Advanced<kbd>X</kbd></button>
+    <button id="btnHelp" class="btn btn-ghost" aria-label="Keyboard shortcuts">?</button>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="plot-area">
+    <div class="plot-wrap" id="plotWrap">
+      <canvas id="plot"></canvas>
+
+      <div class="empty" id="empty">
+        <div class="empty-inner">
+          <h2>Drop a vocal stem to see its tuning</h2>
+          <p>
+            Every note the voice sings is plotted against the semitone grid.
+            Silence is left blank. If the line sits dead on the gridlines,
+            the take has probably been tuned.
+          </p>
+          <button id="btnOpenEmpty" class="btn btn-primary btn-lg">Choose an audio file</button>
+          <p class="empty-note">
+            Use an <strong>isolated vocal</strong>: a stem, an acapella, or a solo'd
+            track. A full mix will read the loudest instrument, not the singer.
+          </p>
+          <p class="empty-note">
+            No stem to hand?
+            <button class="linkish" id="btnDemo">Load an example pair</button>
+            with the same phrase sung naturally and hard-tuned.
+          </p>
+          <p class="empty-note quiet">
+            Audio is analysed in this browser. Nothing is uploaded.
+          </p>
+        </div>
+      </div>
+
+      <div class="readout" id="readout" hidden></div>
+
+      <div class="progress" id="progress" hidden>
+        <div class="progress-label" id="progressLabel">Analysing…</div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
+    </div>
+
+    <div class="transport">
+      <button id="btnPlay" class="btn btn-icon" aria-label="Play" disabled>
+        <span class="icon-play"></span><kbd>space</kbd>
+      </button>
+      <span class="time-display" id="timeDisplay">0:00 / 0:00</span>
+
+      <div class="spacer"></div>
+
+      <div class="seg" role="group" aria-label="View mode">
+        <button id="modePitch" class="seg-btn is-on">Pitch</button>
+        <button id="modeDeviation" class="seg-btn">Cents off<kbd>D</kbd></button>
+      </div>
+
+      <label class="toggle adv-only"><input type="checkbox" id="chkNotes" checked> Note blocks <kbd>N</kbd></label>
+      <label class="toggle"><input type="checkbox" id="chkTolerance" checked> In-tune band <kbd>T</kbd></label>
+
+      <div class="zoom-group">
+        <button id="btnZoomOut" class="btn btn-icon" aria-label="Zoom out">−</button>
+        <button id="btnZoomIn" class="btn btn-icon" aria-label="Zoom in">+</button>
+        <button id="btnFit" class="btn btn-icon btn-wide" aria-label="Fit whole track">Fit<kbd>0</kbd></button>
+      </div>
+    </div>
+  </section>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-empty" id="sidebarEmpty">
+      <p>Load a vocal to see its tuning report.</p>
+    </div>
+    <div class="error-box" id="errorBox" hidden></div>
+    <div id="reports"></div>
+
+    <details class="settings adv-only" id="settingsBlock">
+      <summary>Analysis settings</summary>
+      <div class="settings-body">
+        <label class="field">
+          <span>In-tune tolerance</span>
+          <span class="field-row">
+            <input type="range" id="setTolerance" min="3" max="25" step="1" value="10">
+            <output id="outTolerance">±10¢</output>
+          </span>
+        </label>
+        <label class="field">
+          <span>Shortest note counted</span>
+          <span class="field-row">
+            <input type="range" id="setMinNote" min="40" max="250" step="10" value="70">
+            <output id="outMinNote">70 ms</output>
+          </span>
+        </label>
+        <label class="field">
+          <span>Silence threshold</span>
+          <span class="field-row">
+            <input type="range" id="setSilence" min="18" max="60" step="2" value="34">
+            <output id="outSilence">−34 dB</output>
+          </span>
+        </label>
+        <label class="field">
+          <span>Voice range</span>
+          <span class="field-row">
+            <select id="setRange">
+              <option value="65,1100" selected>Full voice (C2–C6)</option>
+              <option value="65,400">Low / bass–baritone</option>
+              <option value="110,700">Mid / tenor–alto</option>
+              <option value="160,1100">High / soprano</option>
+            </select>
+          </span>
+        </label>
+        <p class="settings-note">Changing these re-analyses the loaded tracks.</p>
+      </div>
+    </details>
+
+    <p class="disclaimer">
+      These are statistical indicators, not proof. Tight tuning can mean pitch
+      correction, an exceptional singer, or a comped take. Treat a high score as
+      a reason to listen closely, not as a verdict.
+    </p>
+  </aside>
+</main>
+
+<div class="modal" id="helpModal" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
+    <header>
+      <h2>Keyboard shortcuts</h2>
+      <button class="btn btn-ghost" id="btnCloseHelp" aria-label="Close">✕</button>
+    </header>
+    <dl class="shortcuts">
+      <div><dt><kbd>O</kbd></dt><dd>Open a vocal track</dd></div>
+      <div><dt><kbd>⇧</kbd><kbd>O</kbd></dt><dd>Add a comparison track</dd></div>
+      <div><dt><kbd>space</kbd></dt><dd>Play / pause</dd></div>
+      <div><dt><kbd>←</kbd><kbd>→</kbd></dt><dd>Scroll through time (<kbd>⇧</kbd> for a bigger step)</dd></div>
+      <div><dt><kbd>↑</kbd><kbd>↓</kbd></dt><dd>Move the pitch range</dd></div>
+      <div><dt><kbd>+</kbd><kbd>−</kbd></dt><dd>Zoom in / out</dd></div>
+      <div><dt><kbd>0</kbd></dt><dd>Fit the whole track</dd></div>
+      <div><dt><kbd>D</kbd></dt><dd>Switch pitch view / cents-off view</dd></div>
+      <div><dt><kbd>N</kbd></dt><dd>Show note blocks</dd></div>
+      <div><dt><kbd>T</kbd></dt><dd>Show the in-tune band</dd></div>
+      <div><dt><kbd>1</kbd><kbd>2</kbd></dt><dd>Show / hide track 1 or 2</dd></div>
+      <div><dt><kbd>X</kbd></dt><dd>Advanced controls</dd></div>
+      <div><dt><kbd>?</kbd></dt><dd>This list</dd></div>
+    </dl>
+    <h3>Reading the graph</h3>
+    <p class="help-body">
+      In <strong>Pitch</strong> view each horizontal line is a semitone. A voice
+      normally weaves around those lines, scooping into notes, drifting, adding
+      vibrato. Pitch correction pulls the line flat onto the grid.
+    </p>
+    <p class="help-body">
+      <strong>Cents off</strong> view subtracts the nearest note, so the whole
+      performance collapses onto one scale. A corrected take hugs the zero line;
+      an untreated one wanders across the full ±50 range.
+    </p>
+  </div>
+</div>
+
+<input type="file" id="fileA" accept="audio/*,.wav,.mp3,.flac,.m4a,.aac,.ogg,.opus" hidden>
+<input type="file" id="fileB" accept="audio/*,.wav,.mp3,.flac,.m4a,.aac,.ogg,.opus" hidden>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
