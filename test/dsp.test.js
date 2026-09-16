@@ -3,6 +3,7 @@
 import { trackPitch, cleanContour, resampleMono, WORK_RATE } from '../js/dsp.js';
 import {
   hzToMidi, midiToHz, estimateTuning, segmentNotes, analyseCorrection, centsOffGrid,
+  midiToAxisLabel, isNatural,
 } from '../js/music.js';
 import { melody, renderContour, NATURAL, CORRECTED, PRECISE_SINGER } from './synth.js';
 
@@ -98,6 +99,23 @@ section('Contour cleanup');
   const kept = cleanContour(leap);
   const highKept = Array.from(kept.slice(34, 56)).filter((v) => Math.abs(v - 370) < 2).length;
   check('sustained leap survives cleanup', highKept > 18, `${highKept}/22 frames kept`);
+}
+
+/* ---------- 3b. axis labels ---------- */
+
+section('Axis note labels');
+{
+  // Column-aligned: the octave digit must land in the same place whether or not
+  // the note has an accidental, or a stack of labels reads as ragged.
+  check('naturals are padded to the accidental column', midiToAxisLabel(69) === 'A 4', `"${midiToAxisLabel(69)}"`);
+  check('sharps fill that column', midiToAxisLabel(70) === 'A#4', `"${midiToAxisLabel(70)}"`);
+  check('every label is the same width',
+    [60, 61, 69, 70, 71].every((m) => midiToAxisLabel(m).length === 3),
+    [60, 61, 69, 70, 71].map(midiToAxisLabel).join(' | '));
+  check('middle C is C 4', midiToAxisLabel(60) === 'C 4', `"${midiToAxisLabel(60)}"`);
+  check('naturals identified correctly',
+    [0, 2, 4, 5, 7, 9, 11].every((p) => isNatural(60 + p))
+    && [1, 3, 6, 8, 10].every((p) => !isNatural(60 + p)));
 }
 
 /* ---------- 4. tuning reference ---------- */

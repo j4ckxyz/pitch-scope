@@ -19,6 +19,25 @@ export function midiToName(midi, { flats = false } = {}) {
   return names[((n % 12) + 12) % 12] + (Math.floor(n / 12) - 1);
 }
 
+/** True for the white keys: C D E F G A B. */
+export function isNatural(midi) {
+  return [0, 2, 4, 5, 7, 9, 11].includes(((Math.round(midi) % 12) + 12) % 12);
+}
+
+/**
+ * Axis label padded so the columns line up in a monospace font: the letter, the
+ * accidental (a space on naturals), then the octave. "A#4" sits directly above
+ * "A 4", which is what makes a stack of them readable as a scale.
+ */
+export function midiToAxisLabel(midi) {
+  const n = Math.round(midi);
+  const name = NOTE_NAMES[((n % 12) + 12) % 12];
+  const octave = Math.floor(n / 12) - 1;
+  const letter = name[0];
+  const accidental = name.length > 1 ? name[1] : ' ';
+  return `${letter}${accidental}${octave}`;
+}
+
 /** Signed distance to the nearest semitone, in cents, in (-50, +50]. */
 export function centsOffGrid(midi) {
   let d = (midi - Math.round(midi)) * 100;

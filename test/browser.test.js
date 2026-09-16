@@ -334,6 +334,73 @@ async function runTests(cdp) {
   check('blue trace drawn', drawn.blue > 300, `${drawn.blue} px`);
   check('amber trace drawn', drawn.amber > 300, `${drawn.amber} px`);
 
+  console.log('\nNote names down the left axis');
+  const axis = await cdp.eval(`
+    const p = window.__pitchScope.plot;
+    p.autoRange();
+    const g = p.gridRows();
+    const labelled = g.rows.filter(r => r.label);
+    return {
+      px: g.pxPerSemitone,
+      total: g.rows.length,
+      labelled: labelled.length,
+      labels: labelled.map(r => r.label),
+      lines: g.rows.filter(r => r.line).length,
+    };
+  `);
+  check('every semitone in view is labelled at default zoom',
+    axis.labelled === axis.total && axis.total > 8,
+    `${axis.labelled}/${axis.total} rows at ${axis.px.toFixed(1)} px each`);
+  check('every semitone in view has a gridline', axis.lines === axis.total, `${axis.lines} lines`);
+  check('labels are column-aligned to one width',
+    new Set(axis.labels.map((l) => l.length)).size === 1 && axis.labels[0].length === 3,
+    axis.labels.slice(0, 6).join(' | '));
+  check('labels run chromatically, sharps included',
+    axis.labels.some((l) => l[1] === '#') && axis.labels.some((l) => l[1] === ' '),
+    axis.labels.join(' '));
+
+  // Squeezed until the text would collide, it must thin out rather than overlap.
+  const thinned = await cdp.eval(`
+    const p = window.__pitchScope.plot;
+    const mid = (p.view.midiLo + p.view.midiHi) / 2;
+    p.view.midiLo = mid - 40; p.view.midiHi = mid + 40;   // 80 semitones on screen
+    const g = p.gridRows();
+    const labelled = g.rows.filter(r => r.label);
+    const ys = labelled.map(r => r.y).sort((a, b) => a - b);
+    let minGap = Infinity;
+    for (let i = 1; i < ys.length; i++) minGap = Math.min(minGap, ys[i] - ys[i - 1]);
+    p.autoRange();
+    return { px: g.pxPerSemitone, labelled: labelled.length, minGap, set: g.labelSet,
+             sample: labelled.slice(0, 5).map(r => r.label) };
+  `);
+  check('labels thin out when rows get tight', thinned.labelled < axis.total * 2,
+    `${thinned.labelled} labels ("${thinned.set}") at ${thinned.px.toFixed(1)} px per semitone`);
+  check('remaining labels never overlap', thinned.minGap >= 12,
+    `closest pair ${thinned.minGap.toFixed(1)} px apart`);
+  check('thinned labels stay musical', /octave|fifth/.test(thinned.set),
+    `${thinned.set}: ${thinned.sample.join(' ')}`);
+
+  // Every zoom level from a two-octave view down to the whole piano.
+  const sweep = await cdp.eval(`
+    const p = window.__pitchScope.plot;
+    const saved = { lo: p.view.midiLo, hi: p.view.midiHi };
+    const bad = [];
+    for (const span of [6, 12, 24, 36, 48, 60, 88, 120]) {
+      const mid = 60;
+      p.view.midiLo = mid - span / 2;
+      p.view.midiHi = mid + span / 2;
+      const g = p.gridRows();
+      const ys = g.rows.filter(r => r.label).map(r => r.y).sort((a, b) => a - b);
+      let minGap = Infinity;
+      for (let i = 1; i < ys.length; i++) minGap = Math.min(minGap, ys[i] - ys[i - 1]);
+      if (ys.length > 1 && minGap < 12) bad.push(span + ' semitones: ' + minGap.toFixed(1) + 'px (' + g.labelSet + ')');
+      if (ys.length === 0) bad.push(span + ' semitones: no labels at all');
+    }
+    p.view.midiLo = saved.lo; p.view.midiHi = saved.hi;
+    return bad;
+  `);
+  check('axis stays legible at every zoom level', sweep.length === 0, sweep.join('; '));
+
   console.log('\nKeyboard shortcuts');
   const before = await cdp.eval('const v = window.__pitchScope.plot.view; return { t0: v.t0, t1: v.t1 };');
   await cdp.key('+', 'Equal', 187);

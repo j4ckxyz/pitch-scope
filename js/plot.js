@@ -7,7 +7,7 @@
  *               trace flattened onto the zero line.
  */
 
-import { midiToName, centsOffGrid } from './music.js';
+import { midiToName, midiToAxisLabel, isNatural, centsOffGrid } from './music.js';
 
 export const TRACK_COLORS = [
   { line: '#4a90d9', fill: 'rgba(74,144,217,0.22)', name: 'Blue' },
@@ -28,7 +28,25 @@ const THEME = {
   tolerance: 'rgba(120,150,130,0.10)',
 };
 
-const PAD = { left: 52, right: 14, top: 12, bottom: 26 };
+// labelX is where axis text starts; left of the plot edge, leaving room for
+// the widest label ('A#-1') at the 10px monospace size.
+const PAD = { left: 52, right: 14, top: 12, bottom: 26, labelX: 10 };
+
+// Vertical room a 10px label needs before its neighbour starts to crowd it.
+const MIN_LABEL_PX = 12;
+
+/**
+ * Candidate label sets, densest first, each with the smallest gap in semitones
+ * it can ever produce. Choosing by guaranteed worst-case gap is what keeps the
+ * axis from overlapping at any zoom. The thinned sets stay musical: octaves and
+ * fifths rather than an arbitrary every-nth-semitone.
+ */
+const LABEL_SETS = [
+  { name: 'chromatic', minGap: 1, has: () => true },
+  { name: 'fifths', minGap: 5, has: (pc) => pc === 0 || pc === 7 },
+  { name: 'octaves', minGap: 12, has: (pc) => pc === 0 },
+  { name: 'alternate-octaves', minGap: 24, has: (pc, m) => pc === 0 && Math.floor(m / 12) % 2 === 0 },
+];
 
 export class PitchPlot {
   constructor(canvas) {
@@ -215,45 +233,78 @@ export class PitchPlot {
     this.drawHover();
   }
 
+  /**
+   * Which semitones get a gridline and which get a name, for the current zoom.
+   *
+   * Kept separate from painting so the density rules can be tested directly.
+   * Every semitone is named whenever there is room for the text, because
+   * reading the note off the axis is the main thing the pitch view is for; only
+   * when rows get too tight does it thin out to naturals, then to octaves.
+   */
+  gridRows() {
+    const r = this.plotRect;
+    const { midiLo, midiHi } = this.view;
+    const px = r.h / (midiHi - midiLo);
+
+    // Densest label set whose guaranteed minimum spacing still clears the text.
+    // "Naturals only" is not a usable tier: E-F and B-C are adjacent semitones,
+    // so its worst-case gap is the same as labelling everything.
+    const set = LABEL_SETS.find((s) => s.minGap * px >= MIN_LABEL_PX)
+      || LABEL_SETS[LABEL_SETS.length - 1];
+
+    const rows = [];
+    for (let m = Math.ceil(midiLo); m <= midiHi; m++) {
+      const pc = ((m % 12) + 12) % 12;
+      // Below ~4px the semitone lines merge into a smear, so drop to octaves.
+      const line = px >= 4 || pc === 0;
+      const label = set.has(pc, m);
+      if (!line && !label) continue;
+      rows.push({
+        midi: m,
+        y: this.valueToY(m),
+        line,
+        label: label ? midiToAxisLabel(m) : null,
+        isC: pc === 0,
+      });
+    }
+    return { rows, pxPerSemitone: px, labelSet: set.name };
+  }
+
   drawPitchGrid() {
     const ctx = this.ctx;
     const r = this.plotRect;
-    const { midiLo, midiHi } = this.view;
-    const span = midiHi - midiLo;
-    // Below ~4px per semitone the lines merge into a smear; drop to octaves.
-    const pxPerSemitone = r.h / span;
-    const step = pxPerSemitone < 4 ? 12 : pxPerSemitone < 9 ? 3 : 1;
-    const labelEvery = pxPerSemitone < 4 ? 12 : pxPerSemitone < 14 ? 12 : pxPerSemitone < 22 ? 3 : 1;
+    const { rows, pxPerSemitone } = this.gridRows();
 
     ctx.font = '10px ui-monospace, SFMono-Regular, Menlo, monospace';
     ctx.textBaseline = 'middle';
+    // Left-aligned in a monospace font, so letters and octave digits each form
+    // a clean column down the axis.
+    ctx.textAlign = 'left';
 
-    const start = Math.ceil(midiLo);
-    for (let m = start; m <= midiHi; m++) {
-      const y = this.valueToY(m);
-      const isC = ((m % 12) + 12) % 12 === 0;
-      if (!isC && (m - start) % step !== 0) continue;
-
+    for (const row of rows) {
       if (this.showTolerance && pxPerSemitone >= 9) {
         // Band showing the +/- tolerance window used by the report.
         const half = this.toleranceCents / 100;
         ctx.fillStyle = THEME.tolerance;
-        ctx.fillRect(r.x, this.valueToY(m + half), r.w, this.valueToY(m - half) - this.valueToY(m + half));
+        ctx.fillRect(r.x, this.valueToY(row.midi + half), r.w,
+          this.valueToY(row.midi - half) - this.valueToY(row.midi + half));
       }
 
-      ctx.strokeStyle = isC ? THEME.gridLineOctave : THEME.gridLine;
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(r.x, Math.round(y) + 0.5);
-      ctx.lineTo(r.x + r.w, Math.round(y) + 0.5);
-      ctx.stroke();
+      if (row.line) {
+        ctx.strokeStyle = row.isC ? THEME.gridLineOctave : THEME.gridLine;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(r.x, Math.round(row.y) + 0.5);
+        ctx.lineTo(r.x + r.w, Math.round(row.y) + 0.5);
+        ctx.stroke();
+      }
 
-      if (isC || (labelEvery === 1) || (labelEvery === 3 && m % 3 === 0)) {
-        ctx.fillStyle = isC ? THEME.gridLabelOctave : THEME.gridLabel;
-        ctx.textAlign = 'right';
-        ctx.fillText(midiToName(m), r.x - 8, y);
+      if (row.label) {
+        ctx.fillStyle = row.isC ? THEME.gridLabelOctave : THEME.gridLabel;
+        ctx.fillText(row.label, PAD.labelX, row.y);
       }
     }
+
     ctx.strokeStyle = THEME.axis;
     ctx.beginPath();
     ctx.moveTo(r.x + 0.5, r.y);
