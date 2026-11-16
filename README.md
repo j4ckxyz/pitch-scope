@@ -4,9 +4,10 @@
 
 ## Recent additions
 
-The current development branch includes a Chinese interface, A/B loop playback,
-independent pitch-range zoom and pan, rectangle selection zoom, and separate
-left-, middle-, and right-button canvas behaviour. See
+The current development branch includes a Chinese and English interface with a
+language toggle, A/B loop playback, independent pitch-range zoom and pan,
+rectangle selection zoom, and separate left-, middle-, and right-button canvas
+behaviour. See
 [README.zh-CN.md](README.zh-CN.md) for the complete Chinese guide.
 
 A web tool for looking at the tuning of a vocal take. Load an isolated vocal and

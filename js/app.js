@@ -5,6 +5,63 @@ import { midiToName, centsOffGrid } from './music.js';
 
 const $ = (id) => document.getElementById(id);
 
+let language = localStorage.getItem('pitchScopeLanguage') === 'en' ? 'en' : 'zh';
+
+const UI_TEXT = {
+  zh: {
+    title: 'Pitch Scope：人声音高分析', languageButton: 'English', languageLabel: '切换语言', viewMode: '视图模式', loopGroup: 'AB循环', open: '打开人声', compare: '添加对比音轨', advanced: '高级',
+    emptyTitle: '拖入人声音轨以查看音准', emptyDescription: '人声唱出的每个音符都会显示在半音网格上。静音部分会留白。如果曲线几乎贴着网格线，这段录音可能经过了修音。', chooseFile: '选择音频文件',
+    isolated: '请使用<strong>独立人声</strong>：人声音轨、清唱或独奏轨道。完整混音会优先识别最响的乐器，而不是歌手。', demo: '手边没有音轨？<button class="linkish" id="btnDemo">加载示例对比</button>查看同一句自然演唱与强制修音的差异。', privacy: '音频仅在当前浏览器中分析，不会上传。',
+    pitch: '音高', deviation: '偏差（音分）', notes: '音符块', toleranceBand: '音准范围', sidebarEmpty: '加载人声后可查看音准报告。', settings: '分析设置', tolerance: '音准容差', minNote: '计入的最短音符', silence: '静音阈值', range: '人声范围', settingsNote: '修改后会重新分析已加载的音轨。',
+    disclaimer: '这些是统计指标，不是结论。精准音准可能来自修音、优秀歌手或拼接录音。分数较高时请结合试听判断。', help: '键盘快捷键', close: '关闭', graph: '如何阅读曲线', graphPitch: '在<strong>音高</strong>视图中，每条水平线代表一个半音。自然人声通常会在网格线周围摆动、滑入音符并产生颤音；修音会让曲线贴近网格。', graphDeviation: '<strong>偏差（音分）</strong>视图会减去最近音符，让整段演唱落在同一音阶上。修音录音会贴近零线，未经处理的录音则会在 ±50 音分范围内变化。',
+    ranges: { full: '完整范围（C2–C6）', low: '低音／男低音', mid: '中音／男高音至女低音', high: '高音／女高音' },
+    helpKeys: { open: '打开人声音轨', compare: '添加对比音轨', play: '播放／暂停', time: '按时间平移（<kbd>⇧</kbd>加大步长）', pitch: '上下移动音高范围', zoom: '放大／缩小时间', fit: '还原默认视图', loop: '设置循环起点和终点；AB 循环开始播放', leftKey: '左键', left: '拖出矩形区域并放大到该区域', middleKey: '中键', middle: '拖动视图；短按定位播放条', deviation: '切换音高／音分偏差视图', notes: '显示音符块', tolerance: '显示音准范围', tracks: '显示／隐藏音轨 1 或 2', advanced: '高级控制', help: '打开本说明' },
+  },
+  en: {
+    title: 'Pitch Scope: pitch-correction inspector for vocal stems', languageButton: '中文', languageLabel: 'Switch language', viewMode: 'View mode', loopGroup: 'AB loop', open: 'Open vocal', compare: 'Add comparison', advanced: 'Advanced',
+    emptyTitle: 'Drop a vocal stem to see its tuning', emptyDescription: 'Every note the voice sings is plotted against the semitone grid. Silence is left blank. If the line sits dead on the gridlines, the take has probably been tuned.', chooseFile: 'Choose an audio file',
+    isolated: 'Use an <strong>isolated vocal</strong>: a stem, an acapella, or a soloed track. A full mix will read the loudest instrument, not the singer.', demo: 'No stem to hand? <button class="linkish" id="btnDemo">Load an example pair</button> with the same phrase sung naturally and hard-tuned.', privacy: 'Audio is analysed in this browser. Nothing is uploaded.',
+    pitch: 'Pitch', deviation: 'Cents off', notes: 'Note blocks', toleranceBand: 'In-tune band', sidebarEmpty: 'Load a vocal to see its tuning report.', settings: 'Analysis settings', tolerance: 'In-tune tolerance', minNote: 'Shortest note counted', silence: 'Silence threshold', range: 'Voice range', settingsNote: 'Changing these re-analyses the loaded tracks.',
+    disclaimer: 'These are statistical indicators, not proof. Tight tuning can mean pitch correction, an exceptional singer, or a comped take. Treat a high score as a reason to listen closely, not as a verdict.', help: 'Keyboard shortcuts', close: 'Close', graph: 'Reading the graph', graphPitch: 'In <strong>Pitch</strong> view each horizontal line is a semitone. A voice normally weaves around those lines, scooping into notes, drifting, and adding vibrato. Pitch correction pulls the line flat onto the grid.', graphDeviation: '<strong>Cents off</strong> view subtracts the nearest note, so the whole performance collapses onto one scale. A corrected take hugs the zero line; an untreated one wanders across the full ±50 range.',
+    ranges: { full: 'Full voice (C2–C6)', low: 'Low / bass–baritone', mid: 'Mid / tenor–alto', high: 'High / soprano' },
+    helpKeys: { open: 'Open a vocal track', compare: 'Add a comparison track', play: 'Play / pause', time: 'Scroll through time (<kbd>⇧</kbd> for a bigger step)', pitch: 'Move the pitch range', zoom: 'Zoom in / out', fit: 'Fit the whole track', loop: 'Set the loop start and end, then play the AB loop', leftKey: 'Left button', left: 'Drag a rectangle to zoom into that area', middleKey: 'Middle button', middle: 'Drag to pan; click to move the playhead', deviation: 'Switch pitch / cents-off view', notes: 'Show note blocks', tolerance: 'Show the in-tune band', tracks: 'Show / hide track 1 or 2', advanced: 'Advanced controls', help: 'This list' },
+  },
+};
+
+function text(key) {
+  return UI_TEXT[language][key];
+}
+
+function applyLanguage(next = language) {
+  language = next;
+  localStorage.setItem('pitchScopeLanguage', language);
+  document.documentElement.lang = language === 'zh' ? 'zh-CN' : 'en';
+  document.title = text('title');
+  const set = (id, key, html = false) => {
+    const node = $(id);
+    if (!node) return;
+    if (html) node.innerHTML = text(key);
+    else if (node.querySelector('kbd')) node.childNodes[0].textContent = text(key);
+    else node.textContent = text(key);
+  };
+  set('btnOpenA', 'open'); set('btnOpenB', 'compare'); set('btnAdvanced', 'advanced'); set('btnLanguage', 'languageButton');
+  set('emptyTitle', 'emptyTitle'); set('emptyDescription', 'emptyDescription'); set('btnOpenEmpty', 'chooseFile'); set('emptyNoteIsolated', 'isolated', true); set('emptyNoteDemo', 'demo', true); set('emptyNotePrivacy', 'privacy');
+  set('modePitchText', 'pitch'); set('modeDeviationText', 'deviation'); set('chkNotesText', 'notes'); set('chkToleranceText', 'toleranceBand'); set('sidebarEmptyText', 'sidebarEmpty'); set('settingsTitle', 'settings'); set('settingToleranceText', 'tolerance'); set('settingMinNoteText', 'minNote'); set('settingSilenceText', 'silence'); set('settingRangeText', 'range'); set('settingsNote', 'settingsNote'); set('disclaimerText', 'disclaimer'); set('helpTitle', 'help'); set('btnCloseHelp', 'close'); set('helpGraphTitle', 'graph'); set('helpGraphPitch', 'graphPitch', true); set('helpGraphDeviation', 'graphDeviation', true);
+  for (const node of document.querySelectorAll('[data-help-key]')) { const key = node.dataset.helpKey; if (text('helpKeys')[key]) node.innerHTML = text('helpKeys')[key]; }
+  for (const option of document.querySelectorAll('[data-range-key]')) option.textContent = text('ranges')[option.dataset.rangeKey];
+  if ($('btnDemo')) $('btnDemo').onclick = loadDemoPair;
+  $('viewModeGroup').setAttribute('aria-label', text('viewMode'));
+  $('loopGroup').setAttribute('aria-label', text('loopGroup'));
+  $('btnLanguage').setAttribute('aria-label', text('languageLabel'));
+  const aria = language === 'zh'
+    ? ['缩小时间', '放大时间', '缩小音高范围', '放大音高范围', '还原默认视图', '清除AB循环']
+    : ['Zoom out in time', 'Zoom in in time', 'Zoom out pitch range', 'Zoom in pitch range', 'Reset view', 'Clear AB loop'];
+  ['btnZoomOut', 'btnZoomIn', 'btnPitchZoomOut', 'btnPitchZoomIn', 'btnFit', 'btnClearLoop'].forEach((id, i) => $(id).setAttribute('aria-label', aria[i]));
+  $('btnHelp').setAttribute('aria-label', text('help'));
+  $('btnCloseHelp').setAttribute('aria-label', text('close'));
+  renderChips(); renderReports(); updateLoopUI(); updateTransport(); draw();
+}
+
 const state = {
   tracks: [], // { id, name, buffer, result, color, visible, slot }
   advanced: false,
@@ -117,8 +174,8 @@ async function loadFile(file, slot) {
 
 function reportError(name, err) {
   const msg = /decode|Unable to decode/i.test(String(err && err.message))
-    ? `无法解码“${name}”。请尝试 WAV、MP3、FLAC、M4A 或 OGG。`
-    : `无法分析“${name}”：${err && err.message ? err.message : err}`;
+    ? (language === 'zh' ? `无法解码“${name}”。请尝试 WAV、MP3、FLAC、M4A 或 OGG。` : `Could not decode “${name}”. Try WAV, MP3, FLAC, M4A or OGG.`)
+    : (language === 'zh' ? `无法分析“${name}”：${err && err.message ? err.message : err}` : `Could not analyse “${name}”: ${err && err.message ? err.message : err}`);
   const box = $('errorBox');
   box.textContent = msg;
   box.hidden = false;
@@ -295,15 +352,15 @@ function renderChips() {
     const eye = document.createElement('button');
     eye.className = 'chip-btn';
     eye.textContent = track.visible ? '◉' : '○';
-    eye.title = `显示或隐藏（${track.slot + 1}）`;
-    eye.setAttribute('aria-label', `切换 ${track.name}`);
+    eye.title = language === 'zh' ? `显示或隐藏（${track.slot + 1}）` : `Show or hide (${track.slot + 1})`;
+    eye.setAttribute('aria-label', language === 'zh' ? `切换 ${track.name}` : `Toggle ${track.name}`);
     eye.onclick = () => toggleTrack(track.slot);
 
     const close = document.createElement('button');
     close.className = 'chip-btn';
     close.textContent = '✕';
-    close.title = '移除音轨';
-    close.setAttribute('aria-label', `移除 ${track.name}`);
+    close.title = language === 'zh' ? '移除音轨' : 'Remove track';
+    close.setAttribute('aria-label', language === 'zh' ? `移除 ${track.name}` : `Remove ${track.name}`);
     close.onclick = () => removeTrack(track.slot);
 
     chip.append(sw, name, eye, close);
@@ -320,8 +377,29 @@ function renderReports() {
   }
 }
 
+function localizedVerdict(report) {
+  if (language === 'zh') return report.verdict;
+  const labels = { unknown: 'Not enough material', high: 'Strong signs of pitch correction', mid: 'Some signs of pitch correction', low: 'Little sign of pitch correction', none: 'No sign of pitch correction' };
+  const texts = { unknown: 'Too few sustained notes to say anything useful. Try a longer passage.', high: 'Pitch sits on the grid more precisely, and more consistently, than an unprocessed voice normally does.', mid: 'Tuning is tighter than typical, but a very accurate singer can look like this. Compare against another take before drawing conclusions.', low: 'Pitch moves the way an unprocessed voice usually moves. Light, transparent correction would not necessarily show up here.', none: 'Natural drift, scooping and vibrato are all present.' };
+  return { label: labels[report.verdict.tone], text: texts[report.verdict.tone] };
+}
+
+function localizedComponent(component) {
+  if (language === 'zh') return component;
+  const labels = { accuracy: 'Note centres on grid', steadiness: 'Pitch held still within notes', snap: 'Note-to-note transition speed', quantisation: 'Time parked on exact pitches' };
+  const detail = component.key === 'accuracy'
+    ? `${component.detail.replace(' 音分：音符中心离散度', '')} cents spread across note centres`
+    : component.key === 'steadiness'
+      ? `${component.detail.replace(' 音分：音符内部典型变化', '')} cents typical movement inside a note`
+      : component.key === 'snap'
+        ? component.detail === '音符变化不足，无法判断' ? 'not enough note changes to judge' : component.detail.replace(' 毫秒：最快半音过渡时间', ' ms to move a semitone at the fastest point')
+        : component.detail.replace('% 的演唱帧在 10 音分以内', '% of sung frames within 10 cents');
+  return { label: labels[component.key], detail };
+}
+
 function buildReport(track) {
   const { report, tuning, notes, duration } = track.result;
+  const verdictText = localizedVerdict(report);
   const root = el('div', 'report');
 
   const head = el('div', 'report-head');
@@ -333,13 +411,13 @@ function buildReport(track) {
 
   const body = el('div', 'report-body');
 
-  const verdict = el('div', `verdict tone-${report.verdict.tone}`, report.verdict.label);
-  const vtext = el('p', 'verdict-text', report.verdict.text);
+  const verdict = el('div', `verdict tone-${report.verdict.tone}`, verdictText.label);
+  const vtext = el('p', 'verdict-text', verdictText.text);
 
   const scoreLine = el('div', 'score-line');
   scoreLine.append(
     el('span', 'score-value', Math.round(report.score * 100)),
-    el('span', 'score-label', '/ 100 修音可能性'),
+    el('span', 'score-label', language === 'zh' ? '/ 100 修音可能性' : '/ 100 correction likelihood'),
   );
 
   const meter = el('div', 'meter');
@@ -355,32 +433,36 @@ function buildReport(track) {
     for (const c of report.components) {
       const wrap = el('div');
       const label = el('div', 'component-label');
-      label.append(el('b', '', c.label), el('span', '', `${Math.round(c.score * 100)}`));
+      const componentText = localizedComponent(c);
+      label.append(el('b', '', componentText.label), el('span', '', `${Math.round(c.score * 100)}`));
       const bar = el('div', 'component-bar');
       const bf = el('div', 'component-fill');
       bf.style.width = `${Math.max(1, c.score * 100)}%`;
       bf.style.background = track.color.line;
       bar.append(bf);
-      wrap.append(label, bar, el('div', 'component-detail', c.detail));
+      wrap.append(label, bar, el('div', 'component-detail', componentText.detail));
       comps.append(wrap);
     }
     body.append(comps);
 
     const facts = el('dl', 'facts');
-    addFact(facts, '持续音符', `${report.sustainedNotes}`);
-    addFact(facts, '检测音符', `${notes.length}`);
-    addFact(facts, '调音参考', `A${tuning.a4.toFixed(1)} Hz`);
-    addFact(facts, '网格偏差', `${signed(tuning.appliedCents, 1)}¢`);
-    addFact(facts, '时长', formatClock(duration));
+    const factsText = language === 'zh'
+      ? ['持续音符', '检测音符', '调音参考', '网格偏差', '时长']
+      : ['Sustained notes', 'Notes found', 'Tuning reference', 'Grid offset', 'Length'];
+    addFact(facts, factsText[0], `${report.sustainedNotes}`);
+    addFact(facts, factsText[1], `${notes.length}`);
+    addFact(facts, factsText[2], `A${tuning.a4.toFixed(1)} Hz`);
+    addFact(facts, factsText[3], `${signed(tuning.appliedCents, 1)}¢`);
+    addFact(facts, factsText[4], formatClock(duration));
     body.append(facts);
 
     const hist = el('div', 'hist-block');
-    hist.append(el('div', 'hist-title', '与最近音符的距离'));
+    hist.append(el('div', 'hist-title', language === 'zh' ? '与最近音符的距离' : 'Distance from the nearest note'));
     const canvas = document.createElement('canvas');
     canvas.className = 'hist';
     hist.append(canvas);
     const axis = el('div', 'hist-axis');
-    axis.append(el('span', '', '−50¢'), el('span', '', '音准'), el('span', '', '+50¢'));
+    axis.append(el('span', '', '−50¢'), el('span', '', language === 'zh' ? '音准' : 'in tune'), el('span', '', '+50¢'));
     hist.append(axis);
     body.append(hist);
     // Size is only known once it is in the document.
@@ -446,7 +528,7 @@ function el(tag, cls = '', text = '') {
 function updateTransport() {
   const btn = $('btnPlay');
   btn.classList.toggle('is-playing', state.playing);
-  btn.setAttribute('aria-label', state.playing ? 'Pause' : 'Play');
+  btn.setAttribute('aria-label', state.playing ? (language === 'zh' ? '暂停' : 'Pause') : (language === 'zh' ? '播放' : 'Play'));
   updateTimeDisplay();
 }
 
@@ -481,9 +563,9 @@ function updateLoopUI() {
   $('btnLoop').disabled = !(a != null && b != null);
   $('btnClearLoop').disabled = !(a != null || b != null);
   $('btnLoop').setAttribute('aria-pressed', String(state.loop.enabled));
-  $('btnLoop').textContent = state.loop.enabled ? '停止 AB' : 'AB 循环';
-  $('btnSetA').textContent = a == null ? '设为 A' : `A ${formatClock(a)}`;
-  $('btnSetB').textContent = b == null ? '设为 B' : `B ${formatClock(b)}`;
+  $('btnLoop').textContent = state.loop.enabled ? (language === 'zh' ? '停止 AB' : 'Stop AB') : (language === 'zh' ? 'AB 循环' : 'AB loop');
+  $('btnSetA').textContent = a == null ? (language === 'zh' ? '设为 A' : 'Set A') : `A ${formatClock(a)}`;
+  $('btnSetB').textContent = b == null ? (language === 'zh' ? '设为 B' : 'Set B') : `B ${formatClock(b)}`;
 }
 
 function updateTimeDisplay() {
@@ -531,7 +613,7 @@ function updateReadout(clientX, clientY) {
         el('span', 'readout-cents', `${signed(cents, 0)}¢`),
       );
     } else {
-      row.append(sw, el('span', 'readout-cents', '静音'));
+      row.append(sw, el('span', 'readout-cents', language === 'zh' ? '静音' : 'silent'));
     }
     out.append(row);
   }
@@ -565,7 +647,10 @@ function setAdvanced(on) {
 
 function showProgress(stage, value) {
   $('progress').hidden = false;
-  $('progressLabel').textContent = stage;
+  const stages = language === 'zh'
+    ? { 'Preparing audio': '准备音频', 'Tracking pitch': '跟踪音高', 'Reading notes': '读取音符', '准备音频': '准备音频', '跟踪音高': '跟踪音高', '读取音符': '读取音符', 'Decoding audio': '正在解码音频' }
+    : { 'Preparing audio': 'Preparing audio', 'Tracking pitch': 'Tracking pitch', 'Reading notes': 'Reading notes', '准备音频': 'Preparing audio', '跟踪音高': 'Tracking pitch', '读取音符': 'Reading notes', '正在解码音频': 'Decoding audio' };
+  $('progressLabel').textContent = stages[stage] || stage;
   $('progressFill').style.width = `${Math.round(value * 100)}%`;
 }
 
@@ -582,6 +667,7 @@ function wireUp() {
   $('fileB').onchange = (e) => { loadFile(e.target.files[0], 1); e.target.value = ''; };
 
   $('btnAdvanced').onclick = () => setAdvanced(!state.advanced);
+  $('btnLanguage').onclick = () => applyLanguage(language === 'zh' ? 'en' : 'zh');
   $('btnHelp').onclick = () => { $('helpModal').hidden = false; };
   $('btnCloseHelp').onclick = () => { $('helpModal').hidden = true; };
   $('helpModal').onclick = (e) => { if (e.target === $('helpModal')) $('helpModal').hidden = true; };
@@ -852,6 +938,7 @@ function wireKeyboard() {
 }
 
 wireUp();
+applyLanguage(language);
 render();
 
 // Exposed for the browser-driven integration test.
