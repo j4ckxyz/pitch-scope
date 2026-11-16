@@ -1,5 +1,11 @@
 # Pitch Scope
 
+## 中文界面与新增操作
+
+当前开发分支默认提供中文界面（音名仍使用 `C3`、`C5` 等标准表示）。播放条下方可用“设为 A”“设为 B”标记循环区间，再点击“AB 循环”播放；循环区间会在曲线上以背景色标出。
+
+画布交互：中键短按定位播放条、长按拖动视图；左键长按拖出矩形区域后，会自动将时间轴和音高范围缩放到该区域，并保留少量边距；右键菜单仅在画布内禁用。时间缩放和音高缩放分别提供按钮，点击“还原”可恢复默认视图。
+
 A web tool for looking at the tuning of a vocal take. Load an isolated vocal and
 every note the singer sings is drawn against the semitone grid. Silence is left
 blank. Load a second vocal and both are drawn on the same graph in different

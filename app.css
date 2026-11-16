@@ -211,6 +211,7 @@ kbd {
 }
 
 .plot-wrap.dragging #plot { cursor: grabbing; }
+.plot-wrap.selecting #plot { cursor: crosshair; }
 .plot-wrap.drop-active { outline: 2px dashed var(--track-a); outline-offset: -8px; }
 
 /* ---------- empty state ---------- */
@@ -367,6 +368,7 @@ kbd {
 .toggle input { accent-color: var(--track-a); margin: 0; }
 
 .zoom-group { display: flex; gap: 5px; }
+.loop-group { display: flex; gap: 5px; align-items: center; }
 
 /* ---------- sidebar ---------- */
 

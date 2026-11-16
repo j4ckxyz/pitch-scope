@@ -11,6 +11,7 @@ const state = {
   playing: false,
   playFrom: 0,
   playStartedAt: 0,
+  loop: { a: null, b: null, enabled: false },
   settings: {
     toleranceCents: 10,
     minNoteMs: 70,
@@ -84,7 +85,7 @@ function ensureAudioCtx() {
 async function loadFile(file, slot) {
   if (!file) return;
   clearError();
-  showProgress('Decoding audio', 0.01);
+  showProgress('正在解码音频', 0.01);
   try {
     const arrayBuf = await file.arrayBuffer();
     const buffer = await ensureAudioCtx().decodeAudioData(arrayBuf);
@@ -105,6 +106,7 @@ async function loadFile(file, slot) {
     state.tracks.sort((a, b) => a.slot - b.slot);
 
     stopPlayback();
+    clearLoop();
     plot.setTracks(state.tracks);
     render();
   } catch (err) {
@@ -115,8 +117,8 @@ async function loadFile(file, slot) {
 
 function reportError(name, err) {
   const msg = /decode|Unable to decode/i.test(String(err && err.message))
-    ? `Could not decode “${name}”. Try WAV, MP3, FLAC, M4A or OGG.`
-    : `Could not analyse “${name}”: ${err && err.message ? err.message : err}`;
+    ? `无法解码“${name}”。请尝试 WAV、MP3、FLAC、M4A 或 OGG。`
+    : `无法分析“${name}”：${err && err.message ? err.message : err}`;
   const box = $('errorBox');
   box.textContent = msg;
   box.hidden = false;
@@ -149,6 +151,7 @@ async function loadDemoPair() {
 
 function removeTrack(slot) {
   state.tracks = state.tracks.filter((t) => t.slot !== slot);
+  if (!state.tracks.length) clearLoop();
   stopPlayback();
   plot.setTracks(state.tracks);
   render();
@@ -179,18 +182,23 @@ function togglePlay() {
   else startPlayback();
 }
 
-function startPlayback() {
+function startPlayback(offsetOverride = null) {
   const track = playbackTrack();
   if (!track) return;
   const ctx = ensureAudioCtx();
   stopPlayback();
 
-  const offset = Math.max(0, Math.min(state.playFrom, track.buffer.duration - 0.01));
+  const requested = offsetOverride == null ? state.playFrom : offsetOverride;
+  const offset = Math.max(0, Math.min(requested, track.buffer.duration - 0.01));
   sourceNode = ctx.createBufferSource();
   sourceNode.buffer = track.buffer;
   sourceNode.connect(ctx.destination);
   sourceNode.onended = () => {
     if (state.playing) {
+      if (state.loop.enabled && state.loop.a != null && state.loop.b != null) {
+        startPlayback(state.loop.a);
+        return;
+      }
       state.playing = false;
       state.playFrom = 0;
       plot.playhead = null;
@@ -200,6 +208,7 @@ function startPlayback() {
   };
   sourceNode.start(0, offset);
   state.playing = true;
+  state.playFrom = offset;
   state.playStartedAt = ctx.currentTime - offset;
   updateTransport();
   tickPlayhead();
@@ -225,6 +234,10 @@ function currentPlayTime() {
 function tickPlayhead() {
   if (!state.playing) return;
   const t = currentPlayTime();
+  if (state.loop.enabled && state.loop.a != null && state.loop.b != null && t >= state.loop.b) {
+    startPlayback(state.loop.a);
+    return;
+  }
   plot.playhead = t;
   // Keep the playhead in view once it leaves the right edge.
   if (t > plot.view.t1 || t < plot.view.t0) {
@@ -247,6 +260,7 @@ function draw() {
   requestAnimationFrame(() => {
     drawQueued = false;
     plot.toleranceCents = state.settings.toleranceCents;
+    plot.loop = state.loop;
     plot.draw();
   });
 }
@@ -257,6 +271,7 @@ function render() {
   $('empty').hidden = state.tracks.length > 0;
   $('sidebarEmpty').hidden = state.tracks.length > 0;
   $('btnPlay').disabled = !state.tracks.length;
+  updateLoopUI();
   updateTimeDisplay();
   draw();
 }
@@ -280,15 +295,15 @@ function renderChips() {
     const eye = document.createElement('button');
     eye.className = 'chip-btn';
     eye.textContent = track.visible ? '◉' : '○';
-    eye.title = `Show or hide (${track.slot + 1})`;
-    eye.setAttribute('aria-label', `Toggle ${track.name}`);
+    eye.title = `显示或隐藏（${track.slot + 1}）`;
+    eye.setAttribute('aria-label', `切换 ${track.name}`);
     eye.onclick = () => toggleTrack(track.slot);
 
     const close = document.createElement('button');
     close.className = 'chip-btn';
     close.textContent = '✕';
-    close.title = 'Remove track';
-    close.setAttribute('aria-label', `Remove ${track.name}`);
+    close.title = '移除音轨';
+    close.setAttribute('aria-label', `移除 ${track.name}`);
     close.onclick = () => removeTrack(track.slot);
 
     chip.append(sw, name, eye, close);
@@ -324,7 +339,7 @@ function buildReport(track) {
   const scoreLine = el('div', 'score-line');
   scoreLine.append(
     el('span', 'score-value', Math.round(report.score * 100)),
-    el('span', 'score-label', '/ 100 correction likelihood'),
+    el('span', 'score-label', '/ 100 修音可能性'),
   );
 
   const meter = el('div', 'meter');
@@ -352,20 +367,20 @@ function buildReport(track) {
     body.append(comps);
 
     const facts = el('dl', 'facts');
-    addFact(facts, 'Sustained notes', `${report.sustainedNotes}`);
-    addFact(facts, 'Notes found', `${notes.length}`);
-    addFact(facts, 'Tuning reference', `A${tuning.a4.toFixed(1)} Hz`);
-    addFact(facts, 'Grid offset', `${signed(tuning.appliedCents, 1)}¢`);
-    addFact(facts, 'Length', formatClock(duration));
+    addFact(facts, '持续音符', `${report.sustainedNotes}`);
+    addFact(facts, '检测音符', `${notes.length}`);
+    addFact(facts, '调音参考', `A${tuning.a4.toFixed(1)} Hz`);
+    addFact(facts, '网格偏差', `${signed(tuning.appliedCents, 1)}¢`);
+    addFact(facts, '时长', formatClock(duration));
     body.append(facts);
 
     const hist = el('div', 'hist-block');
-    hist.append(el('div', 'hist-title', 'Distance from the nearest note'));
+    hist.append(el('div', 'hist-title', '与最近音符的距离'));
     const canvas = document.createElement('canvas');
     canvas.className = 'hist';
     hist.append(canvas);
     const axis = el('div', 'hist-axis');
-    axis.append(el('span', '', '−50¢'), el('span', '', 'in tune'), el('span', '', '+50¢'));
+    axis.append(el('span', '', '−50¢'), el('span', '', '音准'), el('span', '', '+50¢'));
     hist.append(axis);
     body.append(hist);
     // Size is only known once it is in the document.
@@ -435,6 +450,42 @@ function updateTransport() {
   updateTimeDisplay();
 }
 
+function setLoopPoint(which) {
+  if (!state.tracks.length) return;
+  const t = Math.max(0, currentPlayTime());
+  state.loop[which] = t;
+  if (state.loop.a != null && state.loop.b != null && state.loop.b <= state.loop.a) {
+    if (which === 'a') state.loop.b = null;
+    else state.loop.a = null;
+  }
+  if (state.loop.a != null && state.loop.b != null) {
+    state.loop.enabled = true;
+    if (state.playFrom < state.loop.a || state.playFrom >= state.loop.b) state.playFrom = state.loop.a;
+  }
+  updateLoopUI();
+  draw();
+}
+
+function clearLoop() {
+  state.loop = { a: null, b: null, enabled: false };
+  updateLoopUI();
+  draw();
+}
+
+function updateLoopUI() {
+  const hasTrack = state.tracks.length > 0;
+  const a = state.loop.a;
+  const b = state.loop.b;
+  $('btnSetA').disabled = !hasTrack;
+  $('btnSetB').disabled = !hasTrack;
+  $('btnLoop').disabled = !(a != null && b != null);
+  $('btnClearLoop').disabled = !(a != null || b != null);
+  $('btnLoop').setAttribute('aria-pressed', String(state.loop.enabled));
+  $('btnLoop').textContent = state.loop.enabled ? '停止 AB' : 'AB 循环';
+  $('btnSetA').textContent = a == null ? '设为 A' : `A ${formatClock(a)}`;
+  $('btnSetB').textContent = b == null ? '设为 B' : `B ${formatClock(b)}`;
+}
+
 function updateTimeDisplay() {
   const track = playbackTrack();
   const dur = track ? track.buffer.duration : 0;
@@ -480,7 +531,7 @@ function updateReadout(clientX, clientY) {
         el('span', 'readout-cents', `${signed(cents, 0)}¢`),
       );
     } else {
-      row.append(sw, el('span', 'readout-cents', 'silent'));
+      row.append(sw, el('span', 'readout-cents', '静音'));
     }
     out.append(row);
   }
@@ -543,7 +594,20 @@ function wireUp() {
 
   $('btnZoomIn').onclick = () => { plot.zoomTime(0.6); draw(); };
   $('btnZoomOut').onclick = () => { plot.zoomTime(1 / 0.6); draw(); };
-  $('btnFit').onclick = () => { plot.autoRange(); draw(); };
+  $('btnPitchZoomIn').onclick = () => { plot.zoomPitch(0.7); draw(); };
+  $('btnPitchZoomOut').onclick = () => { plot.zoomPitch(1 / 0.7); draw(); };
+  $('btnFit').onclick = () => { plot.resetView(); draw(); };
+  $('btnSetA').onclick = () => setLoopPoint('a');
+  $('btnSetB').onclick = () => setLoopPoint('b');
+  $('btnLoop').onclick = () => {
+    if (state.loop.a != null && state.loop.b != null) {
+      state.loop.enabled = !state.loop.enabled;
+      if (state.loop.enabled && (state.playFrom < state.loop.a || state.playFrom >= state.loop.b)) state.playFrom = state.loop.a;
+      updateLoopUI();
+      draw();
+    }
+  };
+  $('btnClearLoop').onclick = clearLoop;
 
   // Settings: tolerance is display-only; the rest change the analysis.
   const tol = $('setTolerance');
@@ -594,17 +658,26 @@ function wirePlotPointer() {
   canvas.addEventListener('pointermove', (e) => {
     if (dragging) {
       const dx = e.clientX - dragging.x;
-      const span = plot.view.t1 - plot.view.t0;
-      const dt = (dx / plot.plotRect.w) * span;
-      plot.view.t0 = dragging.t0 - dt;
-      plot.view.t1 = dragging.t1 - dt;
-      plot.clampTime();
-
-      if (plot.mode === 'pitch') {
-        const dy = e.clientY - dragging.y;
-        const semis = (dy / plot.plotRect.h) * (dragging.midiHi - dragging.midiLo);
-        plot.view.midiLo = dragging.midiLo + semis;
-        plot.view.midiHi = dragging.midiHi + semis;
+      const dy = e.clientY - dragging.y;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) dragging.moved = true;
+      if (dragging.kind === 'pan') {
+        const span = plot.view.t1 - plot.view.t0;
+        const dt = (dx / plot.plotRect.w) * span;
+        plot.view.t0 = dragging.t0 - dt;
+        plot.view.t1 = dragging.t1 - dt;
+        plot.clampTime();
+        if (plot.mode === 'pitch') {
+          const semis = (dy / plot.plotRect.h) * (dragging.midiHi - dragging.midiLo);
+          plot.view.midiLo = dragging.midiLo + semis;
+          plot.view.midiHi = dragging.midiHi + semis;
+        }
+      } else if (dragging.kind === 'select') {
+        const box = canvas.getBoundingClientRect();
+        const x0 = Math.max(plot.plotRect.x, Math.min(dragging.startX, e.clientX - box.left));
+        const x1 = Math.min(plot.plotRect.x + plot.plotRect.w, Math.max(dragging.startX, e.clientX - box.left));
+        const y0 = Math.max(plot.plotRect.y, Math.min(dragging.startY, e.clientY - box.top));
+        const y1 = Math.min(plot.plotRect.y + plot.plotRect.h, Math.max(dragging.startY, e.clientY - box.top));
+        plot.selection = { x0, y0, x1, y1 };
       }
       draw();
       return;
@@ -620,28 +693,57 @@ function wirePlotPointer() {
   });
 
   canvas.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0 && e.button !== 1) return;
+    e.preventDefault();
     canvas.setPointerCapture(e.pointerId);
+    const box = canvas.getBoundingClientRect();
+    const px = e.clientX - box.left;
+    const py = e.clientY - box.top;
     dragging = {
       x: e.clientX, y: e.clientY,
       t0: plot.view.t0, t1: plot.view.t1,
       midiLo: plot.view.midiLo, midiHi: plot.view.midiHi,
       moved: false,
       downAt: performance.now(),
+      kind: e.button === 0 ? 'select' : 'pan',
+      startX: px, startY: py,
     };
-    wrap.classList.add('dragging');
-  });
-
-  canvas.addEventListener('pointermove', (e) => {
-    if (dragging && (Math.abs(e.clientX - dragging.x) > 3 || Math.abs(e.clientY - dragging.y) > 3)) {
-      dragging.moved = true;
-    }
+    wrap.classList.add(e.button === 0 ? 'selecting' : 'dragging');
   });
 
   canvas.addEventListener('pointerup', (e) => {
-    const wasDrag = dragging && dragging.moved;
+    const finished = dragging;
+    const wasDrag = finished && finished.moved;
     dragging = null;
     wrap.classList.remove('dragging');
-    // A click that didn't drag is a seek.
+    wrap.classList.remove('selecting');
+    if (finished?.kind === 'select') {
+      if (wasDrag && plot.selection) {
+        const box = canvas.getBoundingClientRect();
+        const r = plot.plotRect;
+        const x0 = Math.max(r.x, Math.min(plot.selection.x0, plot.selection.x1));
+        const x1 = Math.min(r.x + r.w, Math.max(plot.selection.x0, plot.selection.x1));
+        const t0 = plot.xToTime(x0);
+        const t1 = plot.xToTime(x1);
+        const padT = Math.max(0.02, (t1 - t0) * 0.05);
+        plot.view.t0 = Math.max(0, t0 - padT);
+        plot.view.t1 = Math.min(plot.fullDuration || t1, t1 + padT);
+        if (plot.mode === 'pitch') {
+          const y0 = Math.max(r.y, Math.min(plot.selection.y0, plot.selection.y1));
+          const y1 = Math.min(r.y + r.h, Math.max(plot.selection.y0, plot.selection.y1));
+          const v0 = plot.yToValue(y1);
+          const v1 = plot.yToValue(y0);
+          const padY = Math.max(0.5, (v1 - v0) * 0.05);
+          plot.view.midiLo = v0 - padY;
+          plot.view.midiHi = v1 + padY;
+        }
+        plot.clampTime();
+      }
+      plot.selection = null;
+      draw();
+      return;
+    }
+    // Middle-button click seeks; middle-button drag pans the view.
     if (!wasDrag && state.tracks.length) {
       const box = canvas.getBoundingClientRect();
       const t = plot.xToTime(e.clientX - box.left);
@@ -658,8 +760,10 @@ function wirePlotPointer() {
     const box = canvas.getBoundingClientRect();
     const r = plot.plotRect;
     const ratio = Math.max(0, Math.min(1, (e.clientX - box.left - r.x) / r.w));
-    if (e.shiftKey) {
-      plot.panTime((e.deltaY > 0 ? 0.08 : -0.08));
+    if (e.altKey) {
+      plot.zoomPitch(e.deltaY > 0 ? 1.12 : 1 / 1.12);
+    } else if (e.shiftKey) {
+      plot.panPitch(e.deltaY > 0 ? -1 : 1);
     } else if (e.ctrlKey || e.metaKey || Math.abs(e.deltaY) >= Math.abs(e.deltaX)) {
       plot.zoomTime(e.deltaY > 0 ? 1.12 : 1 / 1.12, ratio);
     } else {
@@ -667,6 +771,8 @@ function wirePlotPointer() {
     }
     draw();
   }, { passive: false });
+  // Disable the browser context menu only inside this application canvas.
+  canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 }
 
 function wireDropTarget() {
