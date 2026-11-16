@@ -15,7 +15,7 @@ const UI_TEXT = {
     pitch: '音高', deviation: '偏差（音分）', notes: '音符块', toleranceBand: '音准范围', sidebarEmpty: '加载人声后可查看音准报告。', settings: '分析设置', tolerance: '音准容差', minNote: '计入的最短音符', silence: '静音阈值', range: '人声范围', settingsNote: '修改后会重新分析已加载的音轨。',
     disclaimer: '这些是统计指标，不是结论。精准音准可能来自修音、优秀歌手或拼接录音。分数较高时请结合试听判断。', help: '键盘快捷键', close: '关闭', graph: '如何阅读曲线', graphPitch: '在<strong>音高</strong>视图中，每条水平线代表一个半音。自然人声通常会在网格线周围摆动、滑入音符并产生颤音；修音会让曲线贴近网格。', graphDeviation: '<strong>偏差（音分）</strong>视图会减去最近音符，让整段演唱落在同一音阶上。修音录音会贴近零线，未经处理的录音则会在 ±50 音分范围内变化。',
     ranges: { full: '完整范围（C2–C6）', low: '低音／男低音', mid: '中音／男高音至女低音', high: '高音／女高音' },
-    helpKeys: { open: '打开人声音轨', compare: '添加对比音轨', play: '播放／暂停', time: '按时间平移（<kbd>⇧</kbd>加大步长）', pitch: '上下移动音高范围', zoom: '放大／缩小时间', fit: '还原默认视图', loop: '设置循环起点和终点；AB 循环开始播放', leftKey: '左键', left: '拖出矩形区域并放大到该区域', middleKey: '中键', middle: '拖动视图；短按定位播放条', deviation: '切换音高／音分偏差视图', notes: '显示音符块', tolerance: '显示音准范围', tracks: '显示／隐藏音轨 1 或 2', advanced: '高级控制', help: '打开本说明' },
+    helpKeys: { open: '打开人声音轨', compare: '添加对比音轨', play: '播放／暂停', time: '按时间平移（<kbd>⇧</kbd>加大步长）', pitch: '上下移动音高范围', zoom: '放大／缩小时间', fit: '还原默认视图', loop: '设置循环起点和终点；AB 循环开始播放', leftKey: '左键', left: '拖动视图；短按定位播放条', middleKey: '中键', middle: '拖出矩形区域并放大到该区域', deviation: '切换音高／音分偏差视图', notes: '显示音符块', tolerance: '显示音准范围', tracks: '显示／隐藏音轨 1 或 2', advanced: '高级控制', help: '打开本说明' },
   },
   en: {
     title: 'Pitch Scope: pitch-correction inspector for vocal stems', languageButton: '中文', languageLabel: 'Switch language', viewMode: 'View mode', loopGroup: 'AB loop', open: 'Open vocal', compare: 'Add comparison', advanced: 'Advanced',
@@ -24,7 +24,7 @@ const UI_TEXT = {
     pitch: 'Pitch', deviation: 'Cents off', notes: 'Note blocks', toleranceBand: 'In-tune band', sidebarEmpty: 'Load a vocal to see its tuning report.', settings: 'Analysis settings', tolerance: 'In-tune tolerance', minNote: 'Shortest note counted', silence: 'Silence threshold', range: 'Voice range', settingsNote: 'Changing these re-analyses the loaded tracks.',
     disclaimer: 'These are statistical indicators, not proof. Tight tuning can mean pitch correction, an exceptional singer, or a comped take. Treat a high score as a reason to listen closely, not as a verdict.', help: 'Keyboard shortcuts', close: 'Close', graph: 'Reading the graph', graphPitch: 'In <strong>Pitch</strong> view each horizontal line is a semitone. A voice normally weaves around those lines, scooping into notes, drifting, and adding vibrato. Pitch correction pulls the line flat onto the grid.', graphDeviation: '<strong>Cents off</strong> view subtracts the nearest note, so the whole performance collapses onto one scale. A corrected take hugs the zero line; an untreated one wanders across the full ±50 range.',
     ranges: { full: 'Full voice (C2–C6)', low: 'Low / bass–baritone', mid: 'Mid / tenor–alto', high: 'High / soprano' },
-    helpKeys: { open: 'Open a vocal track', compare: 'Add a comparison track', play: 'Play / pause', time: 'Scroll through time (<kbd>⇧</kbd> for a bigger step)', pitch: 'Move the pitch range', zoom: 'Zoom in / out', fit: 'Fit the whole track', loop: 'Set the loop start and end, then play the AB loop', leftKey: 'Left button', left: 'Drag a rectangle to zoom into that area', middleKey: 'Middle button', middle: 'Drag to pan; click to move the playhead', deviation: 'Switch pitch / cents-off view', notes: 'Show note blocks', tolerance: 'Show the in-tune band', tracks: 'Show / hide track 1 or 2', advanced: 'Advanced controls', help: 'This list' },
+    helpKeys: { open: 'Open a vocal track', compare: 'Add a comparison track', play: 'Play / pause', time: 'Scroll through time (<kbd>⇧</kbd> for a bigger step)', pitch: 'Move the pitch range', zoom: 'Zoom in / out', fit: 'Fit the whole track', loop: 'Set the loop start and end, then play the AB loop', leftKey: 'Left button', left: 'Drag to pan; click to move the playhead', middleKey: 'Middle button', middle: 'Drag a rectangle to zoom into that area', deviation: 'Switch pitch / cents-off view', notes: 'Show note blocks', tolerance: 'Show the in-tune band', tracks: 'Show / hide track 1 or 2', advanced: 'Advanced controls', help: 'This list' },
   },
 };
 
@@ -791,10 +791,10 @@ function wirePlotPointer() {
       midiLo: plot.view.midiLo, midiHi: plot.view.midiHi,
       moved: false,
       downAt: performance.now(),
-      kind: e.button === 0 ? 'select' : 'pan',
+      kind: e.button === 0 ? 'pan' : 'select',
       startX: px, startY: py,
     };
-    wrap.classList.add(e.button === 0 ? 'selecting' : 'dragging');
+    wrap.classList.add(e.button === 0 ? 'dragging' : 'selecting');
   });
 
   canvas.addEventListener('pointerup', (e) => {
@@ -829,7 +829,7 @@ function wirePlotPointer() {
       draw();
       return;
     }
-    // Middle-button click seeks; middle-button drag pans the view.
+    // Left-button click seeks; left-button drag pans the view.
     if (!wasDrag && state.tracks.length) {
       const box = canvas.getBoundingClientRect();
       const t = plot.xToTime(e.clientX - box.left);

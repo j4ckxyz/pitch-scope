@@ -123,8 +123,9 @@ Press <kbd>1</kbd> or <kbd>2</kbd> to show and hide either track.
 | <kbd>X</kbd> | Advanced controls |
 | <kbd>?</kbd> | List the shortcuts |
 
-With the mouse: drag to pan, scroll to zoom, click to move the playhead, and
-hover to read the note and its offset in cents.
+With the mouse, use the left button to click and move the playhead or drag to
+pan. Use the middle button to drag a rectangle and zoom into that region. Scroll
+to zoom and hover to read the note and its offset in cents.
 
 ## The correction score
 
