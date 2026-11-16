@@ -44,8 +44,7 @@ a stem of your own.
 
 ## Running it locally
 
-It is a static site with no build step and no dependencies, so any web server
-will do.
+It is a static site with no compile step and no dependencies.
 
 ```sh
 git clone https://github.com/j4ckxyz/pitch-scope.git
@@ -55,8 +54,8 @@ npm start
 
 Then open <http://localhost:8173>.
 
-`npm start` is only a shortcut for `python3 -m http.server 8173`. Any equivalent
-works, for example `npx serve` or `php -S localhost:8173`.
+`npm start` runs the small Node server included in this repository and listens
+on `127.0.0.1:8173`. You can also use `npx serve` or `php -S localhost:8173`.
 
 Opening `index.html` directly from your filesystem will **not** work. The
 analysis runs in a module Web Worker, and browsers only allow those over

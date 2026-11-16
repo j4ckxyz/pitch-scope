@@ -36,7 +36,7 @@ npm start
 
 然后打开 <http://localhost:8173>。
 
-`npm start` 实际执行的是 `python3 -m http.server 8173`，也可以使用 `npx serve` 或 `php -S localhost:8173` 等等效命令。
+`npm start` 会启动仓库自带的 Node 静态服务器，并监听 `127.0.0.1:8173`。也可以使用 `npx serve` 或 `php -S localhost:8173` 等效命令。
 
 不要直接双击打开 `index.html`。音频分析运行在模块化 Web Worker 中，浏览器只允许它通过 `http://` 或 `https://` 加载。
 
