@@ -97,6 +97,49 @@
     <div class="error-box" id="errorBox" hidden></div>
     <div id="reports"></div>
 
+    <details class="mixer" id="mixerBlock" hidden open>
+      <summary id="mixerTitle">播放混音</summary>
+      <div class="mixer-body">
+        <label class="field">
+          <span id="mixerLeftLabel">左声道音轨</span>
+          <select id="mixerLeftTrack"></select>
+        </label>
+        <label class="field">
+          <span id="mixerLeftVolumeLabel">左声道音量</span>
+          <span class="field-row">
+            <input type="range" id="mixerLeftVolume" min="0" max="100" step="1" value="100">
+            <output id="mixerLeftVolumeOut">100%</output>
+          </span>
+        </label>
+        <label class="field">
+          <span id="mixerLeftDelayLabel">左声道对齐偏移</span>
+          <span class="field-row">
+            <input type="range" id="mixerLeftDelay" min="-5000" max="5000" step="10" value="0">
+            <output id="mixerLeftDelayOut">0 ms</output>
+          </span>
+        </label>
+        <label class="field">
+          <span id="mixerRightLabel">右声道音轨</span>
+          <select id="mixerRightTrack"></select>
+        </label>
+        <label class="field">
+          <span id="mixerRightVolumeLabel">右声道音量</span>
+          <span class="field-row">
+            <input type="range" id="mixerRightVolume" min="0" max="100" step="1" value="100">
+            <output id="mixerRightVolumeOut">100%</output>
+          </span>
+        </label>
+        <label class="field">
+          <span id="mixerRightDelayLabel">右声道对齐偏移</span>
+          <span class="field-row">
+            <input type="range" id="mixerRightDelay" min="-5000" max="5000" step="10" value="0">
+            <output id="mixerRightDelayOut">0 ms</output>
+          </span>
+        </label>
+        <button id="btnAlignTracks" class="btn" type="button">自动对齐两条音轨</button>
+      </div>
+    </details>
+
     <details class="settings adv-only" id="settingsBlock">
       <summary id="settingsTitle">分析设置</summary>
       <div class="settings-body">

@@ -9,7 +9,7 @@ let language = localStorage.getItem('pitchScopeLanguage') === 'en' ? 'en' : 'zh'
 
 const UI_TEXT = {
   zh: {
-    title: 'Pitch Scope：人声音高分析', languageButton: 'English', languageLabel: '切换语言', viewMode: '视图模式', loopGroup: 'AB循环', open: '打开人声', compare: '添加对比音轨', advanced: '高级',
+    title: 'Pitch Scope：人声音高分析', languageButton: 'English', languageLabel: '切换语言', viewMode: '视图模式', loopGroup: 'AB循环', mixerTitle: '播放混音', leftTrack: '左声道音轨', leftVolume: '左声道音量', leftDelay: '左声道对齐偏移', rightTrack: '右声道音轨', rightVolume: '右声道音量', rightDelay: '右声道对齐偏移', align: '自动对齐两条音轨', open: '打开人声', compare: '添加对比音轨', advanced: '高级',
     emptyTitle: '拖入人声音轨以查看音准', emptyDescription: '人声唱出的每个音符都会显示在半音网格上。静音部分会留白。如果曲线几乎贴着网格线，这段录音可能经过了修音。', chooseFile: '选择音频文件',
     isolated: '请使用<strong>独立人声</strong>：人声音轨、清唱或独奏轨道。完整混音会优先识别最响的乐器，而不是歌手。', demo: '手边没有音轨？<button class="linkish" id="btnDemo">加载示例对比</button>查看同一句自然演唱与强制修音的差异。', privacy: '音频仅在当前浏览器中分析，不会上传。',
     pitch: '音高', deviation: '偏差（音分）', notes: '音符块', toleranceBand: '音准范围', sidebarEmpty: '加载人声后可查看音准报告。', settings: '分析设置', tolerance: '音准容差', minNote: '计入的最短音符', silence: '静音阈值', range: '人声范围', settingsNote: '修改后会重新分析已加载的音轨。',
@@ -18,7 +18,7 @@ const UI_TEXT = {
     helpKeys: { open: '打开人声音轨', compare: '添加对比音轨', play: '播放／暂停', time: '按时间平移（<kbd>⇧</kbd>加大步长）', pitch: '上下移动音高范围', zoom: '放大／缩小时间', fit: '还原默认视图', loop: '设置循环起点和终点；AB 循环开始播放', leftKey: '左键', left: '拖动视图；短按定位播放条', middleKey: '中键', middle: '拖出矩形区域并放大到该区域', deviation: '切换音高／音分偏差视图', notes: '显示音符块', tolerance: '显示音准范围', tracks: '显示／隐藏音轨 1 或 2', advanced: '高级控制', help: '打开本说明' },
   },
   en: {
-    title: 'Pitch Scope: pitch-correction inspector for vocal stems', languageButton: '中文', languageLabel: 'Switch language', viewMode: 'View mode', loopGroup: 'AB loop', open: 'Open vocal', compare: 'Add comparison', advanced: 'Advanced',
+    title: 'Pitch Scope: pitch-correction inspector for vocal stems', languageButton: '中文', languageLabel: 'Switch language', viewMode: 'View mode', loopGroup: 'AB loop', mixerTitle: 'Playback mixer', leftTrack: 'Left channel track', leftVolume: 'Left channel volume', leftDelay: 'Left alignment offset', rightTrack: 'Right channel track', rightVolume: 'Right channel volume', rightDelay: 'Right alignment offset', align: 'Auto-align two tracks', open: 'Open vocal', compare: 'Add comparison', advanced: 'Advanced',
     emptyTitle: 'Drop a vocal stem to see its tuning', emptyDescription: 'Every note the voice sings is plotted against the semitone grid. Silence is left blank. If the line sits dead on the gridlines, the take has probably been tuned.', chooseFile: 'Choose an audio file',
     isolated: 'Use an <strong>isolated vocal</strong>: a stem, an acapella, or a soloed track. A full mix will read the loudest instrument, not the singer.', demo: 'No stem to hand? <button class="linkish" id="btnDemo">Load an example pair</button> with the same phrase sung naturally and hard-tuned.', privacy: 'Audio is analysed in this browser. Nothing is uploaded.',
     pitch: 'Pitch', deviation: 'Cents off', notes: 'Note blocks', toleranceBand: 'In-tune band', sidebarEmpty: 'Load a vocal to see its tuning report.', settings: 'Analysis settings', tolerance: 'In-tune tolerance', minNote: 'Shortest note counted', silence: 'Silence threshold', range: 'Voice range', settingsNote: 'Changing these re-analyses the loaded tracks.',
@@ -47,6 +47,7 @@ function applyLanguage(next = language) {
   set('btnOpenA', 'open'); set('btnOpenB', 'compare'); set('btnAdvanced', 'advanced'); set('btnLanguage', 'languageButton');
   set('emptyTitle', 'emptyTitle'); set('emptyDescription', 'emptyDescription'); set('btnOpenEmpty', 'chooseFile'); set('emptyNoteIsolated', 'isolated', true); set('emptyNoteDemo', 'demo', true); set('emptyNotePrivacy', 'privacy');
   set('modePitchText', 'pitch'); set('modeDeviationText', 'deviation'); set('chkNotesText', 'notes'); set('chkToleranceText', 'toleranceBand'); set('sidebarEmptyText', 'sidebarEmpty'); set('settingsTitle', 'settings'); set('settingToleranceText', 'tolerance'); set('settingMinNoteText', 'minNote'); set('settingSilenceText', 'silence'); set('settingRangeText', 'range'); set('settingsNote', 'settingsNote'); set('disclaimerText', 'disclaimer'); set('helpTitle', 'help'); set('btnCloseHelp', 'close'); set('helpGraphTitle', 'graph'); set('helpGraphPitch', 'graphPitch', true); set('helpGraphDeviation', 'graphDeviation', true);
+  set('mixerTitle', 'mixerTitle'); set('mixerLeftLabel', 'leftTrack'); set('mixerLeftVolumeLabel', 'leftVolume'); set('mixerLeftDelayLabel', 'leftDelay'); set('mixerRightLabel', 'rightTrack'); set('mixerRightVolumeLabel', 'rightVolume'); set('mixerRightDelayLabel', 'rightDelay'); set('btnAlignTracks', 'align');
   for (const node of document.querySelectorAll('[data-help-key]')) { const key = node.dataset.helpKey; if (text('helpKeys')[key]) node.innerHTML = text('helpKeys')[key]; }
   for (const option of document.querySelectorAll('[data-range-key]')) option.textContent = text('ranges')[option.dataset.rangeKey];
   if ($('btnDemo')) $('btnDemo').onclick = loadDemoPair;
@@ -59,7 +60,7 @@ function applyLanguage(next = language) {
   ['btnZoomOut', 'btnZoomIn', 'btnPitchZoomOut', 'btnPitchZoomIn', 'btnFit', 'btnClearLoop'].forEach((id, i) => $(id).setAttribute('aria-label', aria[i]));
   $('btnHelp').setAttribute('aria-label', text('help'));
   $('btnCloseHelp').setAttribute('aria-label', text('close'));
-  renderChips(); renderReports(); updateLoopUI(); updateTransport(); draw();
+  renderChips(); renderReports(); renderMixer(); updateLoopUI(); updateTransport(); draw();
 }
 
 const state = {
@@ -69,6 +70,7 @@ const state = {
   playFrom: 0,
   playStartedAt: 0,
   loop: { a: null, b: null, enabled: false },
+  mixer: { leftSlot: 0, rightSlot: 0, leftGain: 1, rightGain: 1, leftDelayMs: 0, rightDelayMs: 0 },
   settings: {
     toleranceCents: 10,
     minNoteMs: 70,
@@ -80,7 +82,8 @@ const state = {
 
 const plot = new PitchPlot($('plot'));
 let audioCtx = null;
-let sourceNode = null;
+let sourceNodes = [];
+let mixerNodes = [];
 let worker = null;
 let jobId = 0;
 const pending = new Map();
@@ -145,6 +148,7 @@ async function loadFile(file, slot) {
   showProgress('正在解码音频', 0.01);
   try {
     const arrayBuf = await file.arrayBuffer();
+    const sourceData = bytesToBase64(new Uint8Array(arrayBuf.slice(0)));
     const buffer = await ensureAudioCtx().decodeAudioData(arrayBuf);
     const result = await analyse(buffer);
 
@@ -157,15 +161,18 @@ async function loadFile(file, slot) {
       color: TRACK_COLORS[slot],
       visible: true,
       slot,
+      sourceData,
     };
     if (existing >= 0) state.tracks[existing] = track;
     else state.tracks.push(track);
     state.tracks.sort((a, b) => a.slot - b.slot);
+    if (slot === 1 && state.mixer.rightSlot === 0) state.mixer.rightSlot = 1;
 
     stopPlayback();
     clearLoop();
     plot.setTracks(state.tracks);
     render();
+    await persistSession();
   } catch (err) {
     hideProgress();
     reportError(file.name, err);
@@ -184,6 +191,99 @@ function reportError(name, err) {
 function clearError() {
   $('errorBox').hidden = true;
   $('errorBox').textContent = '';
+}
+
+function bytesToBase64(bytes) {
+  let binary = '';
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  return btoa(binary);
+}
+
+function base64ToBytes(value) {
+  const binary = atob(value);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+function serializeResult(result) {
+  return {
+    ...result,
+    time: Array.from(result.time),
+    midi: Array.from(result.midi),
+    rms: Array.from(result.rms),
+    aperiodicity: Array.from(result.aperiodicity),
+    report: { ...result.report, histogram: Array.from(result.report.histogram) },
+  };
+}
+
+function deserializeResult(result) {
+  return {
+    ...result,
+    time: Float64Array.from(result.time),
+    midi: Float64Array.from(result.midi),
+    rms: Float64Array.from(result.rms),
+    aperiodicity: Float64Array.from(result.aperiodicity),
+    report: { ...result.report, histogram: Float64Array.from(result.report.histogram) },
+  };
+}
+
+async function persistSession() {
+  const tracks = state.tracks.map((track) => ({
+    name: track.name,
+    slot: track.slot,
+    visible: track.visible,
+    sourceData: track.sourceData,
+    result: serializeResult(track.result),
+  }));
+  try {
+    await fetch('/api/session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tracks, mixer: state.mixer }),
+    });
+  } catch {
+    // A different static server, such as npx serve, has no session endpoint.
+  }
+}
+
+let persistTimer = null;
+function schedulePersistSession() {
+  clearTimeout(persistTimer);
+  persistTimer = setTimeout(() => {
+    persistTimer = null;
+    persistSession();
+  }, 250);
+}
+
+async function restoreSession() {
+  try {
+    const response = await fetch('/api/session');
+    if (!response.ok) return;
+    const saved = await response.json();
+    if (!Array.isArray(saved.tracks) || !saved.tracks.length) return;
+    if (saved.mixer) state.mixer = { ...state.mixer, ...saved.mixer };
+    for (const savedTrack of saved.tracks) {
+      const bytes = base64ToBytes(savedTrack.sourceData);
+      const buffer = await ensureAudioCtx().decodeAudioData(bytes.buffer.slice(0));
+      state.tracks.push({
+        id: `${savedTrack.slot}-${Date.now()}-${Math.random()}`,
+        name: savedTrack.name,
+        buffer,
+        result: deserializeResult(savedTrack.result),
+        color: TRACK_COLORS[savedTrack.slot],
+        visible: savedTrack.visible !== false,
+        slot: savedTrack.slot,
+        sourceData: savedTrack.sourceData,
+      });
+    }
+    state.tracks.sort((a, b) => a.slot - b.slot);
+    plot.setTracks(state.tracks);
+    render();
+  } catch {
+    // Empty session or a static server without persistence is a valid state.
+  }
 }
 
 /** Same phrase sung naturally and hard-tuned, so the difference is visible at once. */
@@ -212,6 +312,7 @@ function removeTrack(slot) {
   stopPlayback();
   plot.setTracks(state.tracks);
   render();
+  persistSession();
 }
 
 /** Re-run analysis for every loaded track, e.g. after a settings change. */
@@ -226,12 +327,110 @@ async function reanalyseAll() {
   }
   plot.setTracks(state.tracks);
   render();
+  persistSession();
 }
 
 /* ---------- playback ---------- */
 
 function playbackTrack() {
-  return state.tracks.find((t) => t.visible) || state.tracks[0] || null;
+  return state.tracks.find((t) => t.slot === state.mixer.leftSlot)
+    || state.tracks.find((t) => t.visible)
+    || state.tracks[0]
+    || null;
+}
+
+function mixerTrack(slot) {
+  return state.tracks.find((t) => t.slot === slot) || null;
+}
+
+function playbackDuration() {
+  const channels = [
+    [mixerTrack(state.mixer.leftSlot), state.mixer.leftDelayMs],
+    [mixerTrack(state.mixer.rightSlot), state.mixer.rightDelayMs],
+  ];
+  let duration = 0;
+  for (const [track, delayMs] of channels) {
+    if (track) duration = Math.max(duration, track.buffer.duration + delayMs / 1000);
+  }
+  return Math.max(0, duration);
+}
+
+function restartPlaybackAtCurrentTime() {
+  if (state.playing) startPlayback(currentPlayTime());
+  else updateTimeDisplay();
+  draw();
+}
+
+function setMixerTrack(channel, value) {
+  state.mixer[`${channel}Slot`] = Number(value);
+  restartPlaybackAtCurrentTime();
+  renderMixer();
+  schedulePersistSession();
+}
+
+function setMixerVolume(channel, value) {
+  const gain = Number(value) / 100;
+  state.mixer[`${channel}Gain`] = gain;
+  const channelIndex = channel === 'left' ? 0 : 1;
+  for (const node of mixerNodes) if (node.channel === channelIndex) node.gain.gain.value = gain;
+  renderMixer();
+  schedulePersistSession();
+}
+
+function setMixerDelay(channel, value) {
+  state.mixer[`${channel}DelayMs`] = Number(value);
+  restartPlaybackAtCurrentTime();
+  renderMixer();
+  schedulePersistSession();
+}
+
+function autoAlignTracks() {
+  const left = mixerTrack(state.mixer.leftSlot);
+  const right = mixerTrack(state.mixer.rightSlot);
+  if (!left || !right || left === right) return;
+  const a = left.buffer.getChannelData(0);
+  const b = right.buffer.getChannelData(0);
+  const sampleRate = left.buffer.sampleRate;
+  const lagLimit = Math.round(sampleRate * 5);
+  const lagStep = Math.max(1, Math.round(sampleRate * 0.01));
+  const sampleStep = Math.max(1, Math.round(sampleRate * 0.02));
+  const window = Math.min(a.length, b.length, Math.round(sampleRate * 20));
+  let bestLag = 0;
+  let bestScore = -Infinity;
+
+  for (let lag = -lagLimit; lag <= lagLimit; lag += lagStep) {
+    const startA = Math.max(0, lag);
+    const startB = Math.max(0, -lag);
+    const count = Math.min(window - startA, b.length - startB);
+    if (count < sampleRate) continue;
+    let sumA = 0;
+    let sumB = 0;
+    let sumAA = 0;
+    let sumBB = 0;
+    let sumAB = 0;
+    for (let offset = 0; offset < count; offset += sampleStep) {
+      const av = a[startA + offset];
+      const bv = b[startB + offset];
+      sumA += av;
+      sumB += bv;
+      sumAA += av * av;
+      sumBB += bv * bv;
+      sumAB += av * bv;
+    }
+    const n = Math.max(1, Math.floor(count / sampleStep));
+    const covariance = sumAB - (sumA * sumB) / n;
+    const variance = Math.sqrt((sumAA - (sumA * sumA) / n) * (sumBB - (sumB * sumB) / n));
+    const score = variance > 0 ? covariance / variance : -Infinity;
+    if (score > bestScore) {
+      bestScore = score;
+      bestLag = lag;
+    }
+  }
+
+  state.mixer.rightDelayMs = Math.round((-bestLag * 1000) / sampleRate / 10) * 10;
+  renderMixer();
+  restartPlaybackAtCurrentTime();
+  schedulePersistSession();
 }
 
 function togglePlay() {
@@ -240,30 +439,35 @@ function togglePlay() {
 }
 
 function startPlayback(offsetOverride = null) {
-  const track = playbackTrack();
-  if (!track) return;
+  if (!playbackTrack()) return;
   const ctx = ensureAudioCtx();
   stopPlayback();
 
   const requested = offsetOverride == null ? state.playFrom : offsetOverride;
-  const offset = Math.max(0, Math.min(requested, track.buffer.duration - 0.01));
-  sourceNode = ctx.createBufferSource();
-  sourceNode.buffer = track.buffer;
-  sourceNode.connect(ctx.destination);
-  sourceNode.onended = () => {
-    if (state.playing) {
-      if (state.loop.enabled && state.loop.a != null && state.loop.b != null) {
-        startPlayback(state.loop.a);
-        return;
-      }
-      state.playing = false;
-      state.playFrom = 0;
-      plot.playhead = null;
-      updateTransport();
-      draw();
+  const offset = Math.max(0, Math.min(requested, Math.max(0, playbackDuration() - 0.01)));
+  const channels = [
+    [mixerTrack(state.mixer.leftSlot), state.mixer.leftGain, state.mixer.leftDelayMs, -1],
+    [mixerTrack(state.mixer.rightSlot), state.mixer.rightGain, state.mixer.rightDelayMs, 1],
+  ];
+  for (const [channel, [track, gainValue, delayMs, panValue]] of channels.entries()) {
+    if (!track) continue;
+    const delay = delayMs / 1000;
+    const source = ctx.createBufferSource();
+    const gain = ctx.createGain();
+    const pan = ctx.createStereoPanner();
+    source.buffer = track.buffer;
+    gain.gain.value = gainValue;
+    pan.pan.value = panValue;
+    source.connect(gain).connect(pan).connect(ctx.destination);
+    const when = ctx.currentTime + Math.max(0, delay);
+    const bufferOffset = Math.max(0, offset - Math.min(0, delay));
+    if (bufferOffset < track.buffer.duration) {
+      source.start(when, bufferOffset);
+      sourceNodes.push(source);
+      mixerNodes.push({ channel, gain, pan });
     }
-  };
-  sourceNode.start(0, offset);
+  }
+  if (!sourceNodes.length) return;
   state.playing = true;
   state.playFrom = offset;
   state.playStartedAt = ctx.currentTime - offset;
@@ -272,12 +476,12 @@ function startPlayback(offsetOverride = null) {
 }
 
 function stopPlayback() {
-  if (sourceNode) {
-    sourceNode.onended = null;
-    try { sourceNode.stop(); } catch { /* already stopped */ }
-    sourceNode.disconnect();
-    sourceNode = null;
+  for (const source of sourceNodes) {
+    try { source.stop(); } catch { /* already stopped */ }
+    source.disconnect();
   }
+  sourceNodes = [];
+  mixerNodes = [];
   if (state.playing) state.playFrom = currentPlayTime();
   state.playing = false;
   updateTransport();
@@ -324,6 +528,7 @@ function draw() {
 
 function render() {
   renderChips();
+  renderMixer();
   renderReports();
   $('empty').hidden = state.tracks.length > 0;
   $('sidebarEmpty').hidden = state.tracks.length > 0;
@@ -366,6 +571,38 @@ function renderChips() {
     chip.append(sw, name, eye, close);
     strip.append(chip);
   }
+}
+
+function renderMixer() {
+  const block = $('mixerBlock');
+  if (!block) return;
+  block.hidden = state.tracks.length === 0;
+  const options = state.tracks.map((track) => ({ value: String(track.slot), label: track.name }));
+  const availableSlots = state.tracks.map((track) => track.slot);
+  if (availableSlots.length && !availableSlots.includes(state.mixer.leftSlot)) state.mixer.leftSlot = availableSlots[0];
+  if (availableSlots.length && !availableSlots.includes(state.mixer.rightSlot)) state.mixer.rightSlot = availableSlots[Math.min(1, availableSlots.length - 1)];
+  for (const [id, selected] of [['mixerLeftTrack', state.mixer.leftSlot], ['mixerRightTrack', state.mixer.rightSlot]]) {
+    const select = $(id);
+    const previous = String(selected);
+    select.innerHTML = '';
+    for (const option of options) {
+      const node = document.createElement('option');
+      node.value = option.value;
+      node.textContent = option.label;
+      select.append(node);
+    }
+    if (options.length) select.value = options.some((option) => option.value === previous) ? previous : options[0].value;
+    select.disabled = options.length === 0;
+  }
+  $('mixerLeftVolume').value = Math.round(state.mixer.leftGain * 100);
+  $('mixerRightVolume').value = Math.round(state.mixer.rightGain * 100);
+  $('mixerLeftDelay').value = state.mixer.leftDelayMs;
+  $('mixerRightDelay').value = state.mixer.rightDelayMs;
+  $('mixerLeftVolumeOut').textContent = `${Math.round(state.mixer.leftGain * 100)}%`;
+  $('mixerRightVolumeOut').textContent = `${Math.round(state.mixer.rightGain * 100)}%`;
+  $('mixerLeftDelayOut').textContent = `${state.mixer.leftDelayMs} ms`;
+  $('mixerRightDelayOut').textContent = `${state.mixer.rightDelayMs} ms`;
+  $('btnAlignTracks').disabled = state.tracks.length < 2;
 }
 
 function renderReports() {
@@ -570,7 +807,7 @@ function updateLoopUI() {
 
 function updateTimeDisplay() {
   const track = playbackTrack();
-  const dur = track ? track.buffer.duration : 0;
+  const dur = track ? playbackDuration() : 0;
   $('timeDisplay').textContent = `${formatClock(currentPlayTime())} / ${formatClock(dur)}`;
 }
 
@@ -694,6 +931,13 @@ function wireUp() {
     }
   };
   $('btnClearLoop').onclick = clearLoop;
+  $('mixerLeftTrack').onchange = (e) => setMixerTrack('left', e.target.value);
+  $('mixerRightTrack').onchange = (e) => setMixerTrack('right', e.target.value);
+  $('mixerLeftVolume').oninput = (e) => setMixerVolume('left', e.target.value);
+  $('mixerRightVolume').oninput = (e) => setMixerVolume('right', e.target.value);
+  $('mixerLeftDelay').oninput = (e) => setMixerDelay('left', e.target.value);
+  $('mixerRightDelay').oninput = (e) => setMixerDelay('right', e.target.value);
+  $('btnAlignTracks').onclick = autoAlignTracks;
 
   // Settings: tolerance is display-only; the rest change the analysis.
   const tol = $('setTolerance');
@@ -940,6 +1184,7 @@ function wireKeyboard() {
 wireUp();
 applyLanguage(language);
 render();
+restoreSession();
 
 // Exposed for the browser-driven integration test.
 window.__pitchScope = { state, plot, loadFile };

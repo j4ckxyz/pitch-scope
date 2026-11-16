@@ -514,6 +514,22 @@ canvas.hist {
   background: var(--panel-2);
 }
 
+.mixer {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel-2);
+}
+
+.mixer summary {
+  padding: 9px 11px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  user-select: none;
+}
+
+.mixer-body { padding: 0 11px 11px; display: grid; gap: 11px; }
+
 .settings summary {
   padding: 9px 11px;
   cursor: pointer;
