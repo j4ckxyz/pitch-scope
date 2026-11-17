@@ -97,6 +97,11 @@ npm start
 | <kbd>↑</kbd> <kbd>↓</kbd> | 上下移动音高范围 |
 | <kbd>+</kbd> <kbd>−</kbd> | 缩放时间轴 |
 | <kbd>0</kbd> | 还原默认视图 |
+| <kbd>Ctrl</kbd>+<kbd>↑</kbd> | 缩小音高范围 |
+| <kbd>Ctrl</kbd>+<kbd>↓</kbd> | 放大音高范围 |
+| <kbd>Ctrl</kbd>+<kbd>←</kbd> | 扩大时间范围 |
+| <kbd>Ctrl</kbd>+<kbd>→</kbd> | 缩小时间范围 |
+| <kbd>Ctrl</kbd>+<kbd>Z</kbd> | 还原默认视图 |
 | <kbd>D</kbd> | 切换音高和音分偏差视图 |
 | <kbd>N</kbd> | 显示或隐藏音符块 |
 | <kbd>T</kbd> | 显示或隐藏音准范围 |

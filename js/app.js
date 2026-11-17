@@ -9,22 +9,22 @@ let language = localStorage.getItem('pitchScopeLanguage') === 'en' ? 'en' : 'zh'
 
 const UI_TEXT = {
   zh: {
-    title: 'Pitch Scope：人声音高分析', languageButton: 'English', languageLabel: '切换语言', viewMode: '视图模式', loopGroup: 'AB循环', mixerTitle: '播放混音', leftTrack: '左声道音轨', leftVolume: '左声道音量', leftDelay: '左声道对齐偏移', rightTrack: '右声道音轨', rightVolume: '右声道音量', rightDelay: '右声道对齐偏移', align: '自动对齐两条音轨', open: '打开人声', compare: '添加对比音轨', advanced: '高级',
+    title: 'Pitch Scope：人声音高分析', languageButton: 'English', languageLabel: '切换语言', viewMode: '视图模式', loopGroup: 'AB循环', mixerTitle: '播放混音', leftTrack: '左声道音轨', leftVolume: '左声道音量', leftDelay: '左声道对齐偏移', rightTrack: '右声道音轨', rightVolume: '右声道音量', rightDelay: '右声道对齐偏移', align: '自动对齐两条音轨', fitButton: '还原', open: '打开人声', compare: '添加对比音轨', advanced: '高级',
     emptyTitle: '拖入人声音轨以查看音准', emptyDescription: '人声唱出的每个音符都会显示在半音网格上。静音部分会留白。如果曲线几乎贴着网格线，这段录音可能经过了修音。', chooseFile: '选择音频文件',
     isolated: '请使用<strong>独立人声</strong>：人声音轨、清唱或独奏轨道。完整混音会优先识别最响的乐器，而不是歌手。', demo: '手边没有音轨？<button class="linkish" id="btnDemo">加载示例对比</button>查看同一句自然演唱与强制修音的差异。', privacy: '音频仅在当前浏览器中分析，不会上传。',
     pitch: '音高', deviation: '偏差（音分）', notes: '音符块', toleranceBand: '音准范围', sidebarEmpty: '加载人声后可查看音准报告。', settings: '分析设置', tolerance: '音准容差', minNote: '计入的最短音符', silence: '静音阈值', range: '人声范围', settingsNote: '修改后会重新分析已加载的音轨。',
     disclaimer: '这些是统计指标，不是结论。精准音准可能来自修音、优秀歌手或拼接录音。分数较高时请结合试听判断。', help: '键盘快捷键', close: '关闭', graph: '如何阅读曲线', graphPitch: '在<strong>音高</strong>视图中，每条水平线代表一个半音。自然人声通常会在网格线周围摆动、滑入音符并产生颤音；修音会让曲线贴近网格。', graphDeviation: '<strong>偏差（音分）</strong>视图会减去最近音符，让整段演唱落在同一音阶上。修音录音会贴近零线，未经处理的录音则会在 ±50 音分范围内变化。',
     ranges: { full: '完整范围（C2–C6）', low: '低音／男低音', mid: '中音／男高音至女低音', high: '高音／女高音' },
-    helpKeys: { open: '打开人声音轨', compare: '添加对比音轨', play: '播放／暂停', time: '按时间平移（<kbd>⇧</kbd>加大步长）', pitch: '上下移动音高范围', zoom: '放大／缩小时间', fit: '还原默认视图', loop: '设置循环起点和终点；AB 循环开始播放', leftKey: '左键', left: '拖动视图；短按定位播放条', middleKey: '中键', middle: '拖出矩形区域并放大到该区域', deviation: '切换音高／音分偏差视图', notes: '显示音符块', tolerance: '显示音准范围', tracks: '显示／隐藏音轨 1 或 2', advanced: '高级控制', help: '打开本说明' },
+    helpKeys: { open: '打开人声音轨', compare: '添加对比音轨', play: '播放／暂停', time: '按时间平移（<kbd>⇧</kbd>加大步长）', pitch: '上下移动音高范围', zoom: '放大／缩小时间', fit: '还原默认视图', ctrlPitch: '缩小／放大音高范围', ctrlTime: '扩大／缩小时间范围', ctrlFit: '还原默认视图', loop: '设置循环起点和终点；AB 循环开始播放', leftKey: '左键', left: '拖动视图；短按定位播放条', middleKey: '中键', middle: '拖出矩形区域并放大到该区域', deviation: '切换音高／音分偏差视图', notes: '显示音符块', tolerance: '显示音准范围', tracks: '显示／隐藏音轨 1 或 2', advanced: '高级控制', help: '打开本说明' },
   },
   en: {
-    title: 'Pitch Scope: pitch-correction inspector for vocal stems', languageButton: '中文', languageLabel: 'Switch language', viewMode: 'View mode', loopGroup: 'AB loop', mixerTitle: 'Playback mixer', leftTrack: 'Left channel track', leftVolume: 'Left channel volume', leftDelay: 'Left alignment offset', rightTrack: 'Right channel track', rightVolume: 'Right channel volume', rightDelay: 'Right alignment offset', align: 'Auto-align two tracks', open: 'Open vocal', compare: 'Add comparison', advanced: 'Advanced',
+    title: 'Pitch Scope: pitch-correction inspector for vocal stems', languageButton: '中文', languageLabel: 'Switch language', viewMode: 'View mode', loopGroup: 'AB loop', mixerTitle: 'Playback mixer', leftTrack: 'Left channel track', leftVolume: 'Left channel volume', leftDelay: 'Left alignment offset', rightTrack: 'Right channel track', rightVolume: 'Right channel volume', rightDelay: 'Right alignment offset', align: 'Auto-align two tracks', fitButton: 'Reset', open: 'Open vocal', compare: 'Add comparison', advanced: 'Advanced',
     emptyTitle: 'Drop a vocal stem to see its tuning', emptyDescription: 'Every note the voice sings is plotted against the semitone grid. Silence is left blank. If the line sits dead on the gridlines, the take has probably been tuned.', chooseFile: 'Choose an audio file',
     isolated: 'Use an <strong>isolated vocal</strong>: a stem, an acapella, or a soloed track. A full mix will read the loudest instrument, not the singer.', demo: 'No stem to hand? <button class="linkish" id="btnDemo">Load an example pair</button> with the same phrase sung naturally and hard-tuned.', privacy: 'Audio is analysed in this browser. Nothing is uploaded.',
     pitch: 'Pitch', deviation: 'Cents off', notes: 'Note blocks', toleranceBand: 'In-tune band', sidebarEmpty: 'Load a vocal to see its tuning report.', settings: 'Analysis settings', tolerance: 'In-tune tolerance', minNote: 'Shortest note counted', silence: 'Silence threshold', range: 'Voice range', settingsNote: 'Changing these re-analyses the loaded tracks.',
     disclaimer: 'These are statistical indicators, not proof. Tight tuning can mean pitch correction, an exceptional singer, or a comped take. Treat a high score as a reason to listen closely, not as a verdict.', help: 'Keyboard shortcuts', close: 'Close', graph: 'Reading the graph', graphPitch: 'In <strong>Pitch</strong> view each horizontal line is a semitone. A voice normally weaves around those lines, scooping into notes, drifting, and adding vibrato. Pitch correction pulls the line flat onto the grid.', graphDeviation: '<strong>Cents off</strong> view subtracts the nearest note, so the whole performance collapses onto one scale. A corrected take hugs the zero line; an untreated one wanders across the full ±50 range.',
     ranges: { full: 'Full voice (C2–C6)', low: 'Low / bass–baritone', mid: 'Mid / tenor–alto', high: 'High / soprano' },
-    helpKeys: { open: 'Open a vocal track', compare: 'Add a comparison track', play: 'Play / pause', time: 'Scroll through time (<kbd>⇧</kbd> for a bigger step)', pitch: 'Move the pitch range', zoom: 'Zoom in / out', fit: 'Fit the whole track', loop: 'Set the loop start and end, then play the AB loop', leftKey: 'Left button', left: 'Drag to pan; click to move the playhead', middleKey: 'Middle button', middle: 'Drag a rectangle to zoom into that area', deviation: 'Switch pitch / cents-off view', notes: 'Show note blocks', tolerance: 'Show the in-tune band', tracks: 'Show / hide track 1 or 2', advanced: 'Advanced controls', help: 'This list' },
+    helpKeys: { open: 'Open a vocal track', compare: 'Add a comparison track', play: 'Play / pause', time: 'Scroll through time (<kbd>⇧</kbd> for a bigger step)', pitch: 'Move the pitch range', zoom: 'Zoom in / out', fit: 'Fit the whole track', ctrlPitch: 'Zoom the pitch range in / out', ctrlTime: 'Expand / shrink the time range', ctrlFit: 'Reset the view', loop: 'Set the loop start and end, then play the AB loop', leftKey: 'Left button', left: 'Drag to pan; click to move the playhead', middleKey: 'Middle button', middle: 'Drag a rectangle to zoom into that area', deviation: 'Switch pitch / cents-off view', notes: 'Show note blocks', tolerance: 'Show the in-tune band', tracks: 'Show / hide track 1 or 2', advanced: 'Advanced controls', help: 'This list' },
   },
 };
 
@@ -47,7 +47,7 @@ function applyLanguage(next = language) {
   set('btnOpenA', 'open'); set('btnOpenB', 'compare'); set('btnAdvanced', 'advanced'); set('btnLanguage', 'languageButton');
   set('emptyTitle', 'emptyTitle'); set('emptyDescription', 'emptyDescription'); set('btnOpenEmpty', 'chooseFile'); set('emptyNoteIsolated', 'isolated', true); set('emptyNoteDemo', 'demo', true); set('emptyNotePrivacy', 'privacy');
   set('modePitchText', 'pitch'); set('modeDeviationText', 'deviation'); set('chkNotesText', 'notes'); set('chkToleranceText', 'toleranceBand'); set('sidebarEmptyText', 'sidebarEmpty'); set('settingsTitle', 'settings'); set('settingToleranceText', 'tolerance'); set('settingMinNoteText', 'minNote'); set('settingSilenceText', 'silence'); set('settingRangeText', 'range'); set('settingsNote', 'settingsNote'); set('disclaimerText', 'disclaimer'); set('helpTitle', 'help'); set('btnCloseHelp', 'close'); set('helpGraphTitle', 'graph'); set('helpGraphPitch', 'graphPitch', true); set('helpGraphDeviation', 'graphDeviation', true);
-  set('mixerTitle', 'mixerTitle'); set('mixerLeftLabel', 'leftTrack'); set('mixerLeftVolumeLabel', 'leftVolume'); set('mixerLeftDelayLabel', 'leftDelay'); set('mixerRightLabel', 'rightTrack'); set('mixerRightVolumeLabel', 'rightVolume'); set('mixerRightDelayLabel', 'rightDelay'); set('btnAlignTracks', 'align');
+  set('mixerTitle', 'mixerTitle'); set('mixerLeftLabel', 'leftTrack'); set('mixerLeftVolumeLabel', 'leftVolume'); set('mixerLeftDelayLabel', 'leftDelay'); set('mixerRightLabel', 'rightTrack'); set('mixerRightVolumeLabel', 'rightVolume'); set('mixerRightDelayLabel', 'rightDelay'); set('btnAlignTracks', 'align'); set('fitText', 'fitButton');
   for (const node of document.querySelectorAll('[data-help-key]')) { const key = node.dataset.helpKey; if (text('helpKeys')[key]) node.innerHTML = text('helpKeys')[key]; }
   for (const option of document.querySelectorAll('[data-range-key]')) option.textContent = text('ranges')[option.dataset.rangeKey];
   if ($('btnDemo')) $('btnDemo').onclick = loadDemoPair;
@@ -1136,7 +1136,19 @@ function wireKeyboard() {
   window.addEventListener('keydown', (e) => {
     const tag = e.target.tagName;
     if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
-    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.metaKey || e.altKey) return;
+
+    if (e.ctrlKey) {
+      switch (e.key) {
+        case 'ArrowUp': e.preventDefault(); plot.zoomPitch(0.7); draw(); break;
+        case 'ArrowDown': e.preventDefault(); plot.zoomPitch(1 / 0.7); draw(); break;
+        case 'ArrowLeft': e.preventDefault(); plot.zoomTime(1.12); draw(); break;
+        case 'ArrowRight': e.preventDefault(); plot.zoomTime(1 / 1.12); draw(); break;
+        case 'z': case 'Z': e.preventDefault(); plot.resetView(); draw(); break;
+        default: break;
+      }
+      return;
+    }
 
     const big = e.shiftKey ? 3 : 1;
     switch (e.key) {

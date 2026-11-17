@@ -74,14 +74,14 @@
       <label class="toggle adv-only"><input type="checkbox" id="chkNotes" checked> <span id="chkNotesText">音符块</span> <kbd>N</kbd></label>
       <label class="toggle"><input type="checkbox" id="chkTolerance" checked> <span id="chkToleranceText">音准范围</span> <kbd>T</kbd></label>
 
-      <div class="zoom-group">
-        <button id="btnZoomOut" class="btn btn-icon" aria-label="缩小时间">−</button>
-        <button id="btnZoomIn" class="btn btn-icon" aria-label="放大时间">+</button>
-        <button id="btnPitchZoomOut" class="btn btn-icon" aria-label="缩小音高范围">↕−</button>
-        <button id="btnPitchZoomIn" class="btn btn-icon" aria-label="放大音高范围">↕+</button>
-        <button id="btnFit" class="btn btn-icon btn-wide" aria-label="还原默认视图">还原<kbd>0</kbd></button>
+      <div class="zoom-group control-group" role="group" aria-label="缩放和还原">
+        <button id="btnZoomOut" class="btn btn-icon shortcut-btn" aria-label="缩小时间"><span>↔−</span><kbd>Ctrl+←</kbd></button>
+        <button id="btnZoomIn" class="btn btn-icon shortcut-btn" aria-label="放大时间"><span>↔+</span><kbd>Ctrl+→</kbd></button>
+        <button id="btnPitchZoomOut" class="btn btn-icon shortcut-btn" aria-label="缩小音高范围"><span>↕−</span><kbd>Ctrl+↑</kbd></button>
+        <button id="btnPitchZoomIn" class="btn btn-icon shortcut-btn" aria-label="放大音高范围"><span>↕+</span><kbd>Ctrl+↓</kbd></button>
+        <button id="btnFit" class="btn btn-icon btn-wide shortcut-btn" aria-label="还原默认视图"><span id="fitText">还原</span><kbd>Ctrl+Z</kbd></button>
       </div>
-      <div class="loop-group" id="loopGroup" role="group" aria-label="AB循环">
+      <div class="loop-group control-group" id="loopGroup" role="group" aria-label="AB循环">
         <button id="btnSetA" class="btn btn-wide" disabled>设为 A</button>
         <button id="btnSetB" class="btn btn-wide" disabled>设为 B</button>
         <button id="btnLoop" class="btn btn-wide" aria-pressed="false" disabled>AB 循环</button>
@@ -199,6 +199,9 @@
       <div><dt><kbd>↑</kbd><kbd>↓</kbd></dt><dd data-help-key="pitch">上下移动音高范围</dd></div>
       <div><dt><kbd>+</kbd><kbd>−</kbd></dt><dd data-help-key="zoom">放大／缩小时间</dd></div>
       <div><dt><kbd>0</kbd></dt><dd data-help-key="fit">还原默认视图</dd></div>
+      <div><dt><kbd>Ctrl</kbd><kbd>↑</kbd><kbd>↓</kbd></dt><dd data-help-key="ctrlPitch">缩小／放大音高范围</dd></div>
+      <div><dt><kbd>Ctrl</kbd><kbd>←</kbd><kbd>→</kbd></dt><dd data-help-key="ctrlTime">扩大／缩小时间范围</dd></div>
+      <div><dt><kbd>Ctrl</kbd><kbd>Z</kbd></dt><dd data-help-key="ctrlFit">还原默认视图</dd></div>
       <div><dt>A / B</dt><dd data-help-key="loop">设置循环起点和终点；AB 循环开始播放</dd></div>
       <div><dt data-help-key="leftKey">左键</dt><dd data-help-key="left">拖动视图；短按定位播放条</dd></div>
       <div><dt data-help-key="middleKey">中键</dt><dd data-help-key="middle">拖出矩形区域并放大到该区域</dd></div>

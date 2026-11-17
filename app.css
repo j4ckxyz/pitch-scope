@@ -367,8 +367,30 @@ kbd {
 
 .toggle input { accent-color: var(--track-a); margin: 0; }
 
-.zoom-group { display: flex; gap: 5px; }
-.loop-group { display: flex; gap: 5px; align-items: center; }
+.control-group {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  padding: 4px;
+  border: 1px solid #394452;
+  border-radius: 8px;
+  background: rgba(42, 47, 57, 0.34);
+}
+
+.shortcut-btn {
+  width: auto;
+  min-width: 58px;
+  padding: 0 7px;
+  gap: 5px;
+}
+
+.shortcut-btn kbd {
+  display: inline-flex;
+  font-size: 9px;
+  padding: 2px 3px;
+}
+
+.zoom-group, .loop-group { display: flex; }
 
 /* ---------- sidebar ---------- */
 

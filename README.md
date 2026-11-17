@@ -127,6 +127,11 @@ browser restores them while the server process is still running.
 | <kbd>↑</kbd> <kbd>↓</kbd> | Move the pitch range up and down |
 | <kbd>+</kbd> <kbd>−</kbd> | Zoom in and out |
 | <kbd>0</kbd> | Fit the whole track |
+| <kbd>Ctrl</kbd>+<kbd>↑</kbd> | Zoom the pitch range out |
+| <kbd>Ctrl</kbd>+<kbd>↓</kbd> | Zoom the pitch range in |
+| <kbd>Ctrl</kbd>+<kbd>←</kbd> | Expand the time range |
+| <kbd>Ctrl</kbd>+<kbd>→</kbd> | Shrink the time range |
+| <kbd>Ctrl</kbd>+<kbd>Z</kbd> | Reset the view |
 | <kbd>D</kbd> | Switch between the pitch and cents-off views |
 | <kbd>N</kbd> | Show or hide note blocks |
 | <kbd>T</kbd> | Show or hide the in-tune band |
