@@ -9,7 +9,7 @@ let language = localStorage.getItem('pitchScopeLanguage') === 'en' ? 'en' : 'zh'
 
 const UI_TEXT = {
   zh: {
-    title: 'Pitch Scope：人声音高分析', languageButton: 'English', languageLabel: '切换语言', viewMode: '视图模式', loopGroup: 'AB循环', mixerTitle: '播放混音', leftTrack: '左声道音轨', leftVolume: '左声道音量', leftDelay: '左声道对齐偏移', rightTrack: '右声道音轨', rightVolume: '右声道音量', rightDelay: '右声道对齐偏移', align: '自动对齐两条音轨', fitButton: '还原', open: '打开人声', compare: '添加对比音轨', advanced: '高级',
+    title: 'Pitch Scope：人声音高分析', languageButton: 'English', languageLabel: '切换语言', viewMode: '视图模式', loopGroup: 'AB循环', pitchLock: '锁定音高范围', pitchLocked: '音高范围已锁定', mixerTitle: '播放混音', leftTrack: '左声道音轨', leftVolume: '左声道音量', leftDelay: '左声道对齐偏移', rightTrack: '右声道音轨', rightVolume: '右声道音量', rightDelay: '右声道对齐偏移', align: '自动对齐两条音轨', fitButton: '还原', open: '打开人声', compare: '添加对比音轨', advanced: '高级',
     emptyTitle: '拖入人声音轨以查看音准', emptyDescription: '人声唱出的每个音符都会显示在半音网格上。静音部分会留白。如果曲线几乎贴着网格线，这段录音可能经过了修音。', chooseFile: '选择音频文件',
     isolated: '请使用<strong>独立人声</strong>：人声音轨、清唱或独奏轨道。完整混音会优先识别最响的乐器，而不是歌手。', demo: '手边没有音轨？<button class="linkish" id="btnDemo">加载示例对比</button>查看同一句自然演唱与强制修音的差异。', privacy: '音频仅在当前浏览器中分析，不会上传。',
     pitch: '音高', deviation: '偏差（音分）', notes: '音符块', toleranceBand: '音准范围', sidebarEmpty: '加载人声后可查看音准报告。', settings: '分析设置', tolerance: '音准容差', minNote: '计入的最短音符', silence: '静音阈值', range: '人声范围', settingsNote: '修改后会重新分析已加载的音轨。',
@@ -18,7 +18,7 @@ const UI_TEXT = {
     helpKeys: { open: '打开人声音轨', compare: '添加对比音轨', play: '播放／暂停', time: '按时间平移（<kbd>⇧</kbd>加大步长）', pitch: '上下移动音高范围', zoom: '放大／缩小时间', fit: '还原默认视图', ctrlPitch: '缩小／放大音高范围', ctrlTime: '扩大／缩小时间范围', ctrlFit: '还原默认视图', loop: '设置循环起点和终点；AB 循环开始播放', leftKey: '左键', left: '拖动视图；短按定位播放条', middleKey: '中键', middle: '拖出矩形区域并放大到该区域', deviation: '切换音高／音分偏差视图', notes: '显示音符块', tolerance: '显示音准范围', tracks: '显示／隐藏音轨 1 或 2', advanced: '高级控制', help: '打开本说明' },
   },
   en: {
-    title: 'Pitch Scope: pitch-correction inspector for vocal stems', languageButton: '中文', languageLabel: 'Switch language', viewMode: 'View mode', loopGroup: 'AB loop', mixerTitle: 'Playback mixer', leftTrack: 'Left channel track', leftVolume: 'Left channel volume', leftDelay: 'Left alignment offset', rightTrack: 'Right channel track', rightVolume: 'Right channel volume', rightDelay: 'Right alignment offset', align: 'Auto-align two tracks', fitButton: 'Reset', open: 'Open vocal', compare: 'Add comparison', advanced: 'Advanced',
+    title: 'Pitch Scope: pitch-correction inspector for vocal stems', languageButton: '中文', languageLabel: 'Switch language', viewMode: 'View mode', loopGroup: 'AB loop', pitchLock: 'Lock pitch range', pitchLocked: 'Pitch range is locked', mixerTitle: 'Playback mixer', leftTrack: 'Left channel track', leftVolume: 'Left channel volume', leftDelay: 'Left alignment offset', rightTrack: 'Right channel track', rightVolume: 'Right channel volume', rightDelay: 'Right alignment offset', align: 'Auto-align two tracks', fitButton: 'Reset', open: 'Open vocal', compare: 'Add comparison', advanced: 'Advanced',
     emptyTitle: 'Drop a vocal stem to see its tuning', emptyDescription: 'Every note the voice sings is plotted against the semitone grid. Silence is left blank. If the line sits dead on the gridlines, the take has probably been tuned.', chooseFile: 'Choose an audio file',
     isolated: 'Use an <strong>isolated vocal</strong>: a stem, an acapella, or a soloed track. A full mix will read the loudest instrument, not the singer.', demo: 'No stem to hand? <button class="linkish" id="btnDemo">Load an example pair</button> with the same phrase sung naturally and hard-tuned.', privacy: 'Audio is analysed in this browser. Nothing is uploaded.',
     pitch: 'Pitch', deviation: 'Cents off', notes: 'Note blocks', toleranceBand: 'In-tune band', sidebarEmpty: 'Load a vocal to see its tuning report.', settings: 'Analysis settings', tolerance: 'In-tune tolerance', minNote: 'Shortest note counted', silence: 'Silence threshold', range: 'Voice range', settingsNote: 'Changing these re-analyses the loaded tracks.',
@@ -30,6 +30,28 @@ const UI_TEXT = {
 
 function text(key) {
   return UI_TEXT[language][key];
+}
+
+function updatePitchLockButton() {
+  const button = $('btnPitchLock');
+  if (!button) return;
+  button.setAttribute('aria-pressed', String(state.pitchLocked));
+  button.setAttribute('aria-label', state.pitchLocked ? text('pitchLocked') : text('pitchLock'));
+  button.title = state.pitchLocked ? text('pitchLocked') : text('pitchLock');
+}
+
+function allowPitchAdjustment() {
+  if (!state.pitchLocked) return true;
+  const message = language === 'zh'
+    ? '当前音高范围已锁定。点击“确定”取消锁定并继续调整，点击“取消”保持锁定。'
+    : 'The pitch range is locked. Choose OK to unlock and adjust, or Cancel to keep it locked.';
+  if (window.confirm(message)) {
+    state.pitchLocked = false;
+    updatePitchLockButton();
+    schedulePersistSession();
+    return true;
+  }
+  return false;
 }
 
 function applyLanguage(next = language) {
@@ -60,6 +82,7 @@ function applyLanguage(next = language) {
   ['btnZoomOut', 'btnZoomIn', 'btnPitchZoomOut', 'btnPitchZoomIn', 'btnFit', 'btnClearLoop'].forEach((id, i) => $(id).setAttribute('aria-label', aria[i]));
   $('btnHelp').setAttribute('aria-label', text('help'));
   $('btnCloseHelp').setAttribute('aria-label', text('close'));
+  updatePitchLockButton();
   renderChips(); renderReports(); renderMixer(); updateLoopUI(); updateTransport(); draw();
 }
 
@@ -71,6 +94,7 @@ const state = {
   playStartedAt: 0,
   loop: { a: null, b: null, enabled: false },
   mixer: { leftSlot: 0, rightSlot: 0, leftGain: 1, rightGain: 1, leftDelayMs: 0, rightDelayMs: 0 },
+  pitchLocked: false,
   settings: {
     toleranceCents: 10,
     minNoteMs: 70,
@@ -170,13 +194,20 @@ async function loadFile(file, slot) {
 
     stopPlayback();
     clearLoop();
-    plot.setTracks(state.tracks);
+    updatePlotTracks();
     render();
     await persistSession();
   } catch (err) {
     hideProgress();
     reportError(file.name, err);
   }
+}
+
+function updatePlotTracks() {
+  const previousView = { ...plot.view };
+  const canRefit = !state.pitchLocked || !state.tracks.length || allowPitchAdjustment();
+  plot.setTracks(state.tracks);
+  if (!canRefit) plot.view = previousView;
 }
 
 function reportError(name, err) {
@@ -241,7 +272,7 @@ async function persistSession() {
     await fetch('/api/session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tracks, mixer: state.mixer }),
+      body: JSON.stringify({ tracks, mixer: state.mixer, pitchLocked: state.pitchLocked }),
     });
   } catch {
     // A different static server, such as npx serve, has no session endpoint.
@@ -264,6 +295,7 @@ async function restoreSession() {
     const saved = await response.json();
     if (!Array.isArray(saved.tracks) || !saved.tracks.length) return;
     if (saved.mixer) state.mixer = { ...state.mixer, ...saved.mixer };
+    state.pitchLocked = saved.pitchLocked === true;
     for (const savedTrack of saved.tracks) {
       const bytes = base64ToBytes(savedTrack.sourceData);
       const buffer = await ensureAudioCtx().decodeAudioData(bytes.buffer.slice(0));
@@ -279,7 +311,7 @@ async function restoreSession() {
       });
     }
     state.tracks.sort((a, b) => a.slot - b.slot);
-    plot.setTracks(state.tracks);
+    updatePlotTracks();
     render();
   } catch {
     // Empty session or a static server without persistence is a valid state.
@@ -310,7 +342,7 @@ function removeTrack(slot) {
   state.tracks = state.tracks.filter((t) => t.slot !== slot);
   if (!state.tracks.length) clearLoop();
   stopPlayback();
-  plot.setTracks(state.tracks);
+  updatePlotTracks();
   render();
   persistSession();
 }
@@ -325,7 +357,7 @@ async function reanalyseAll() {
       reportError(track.name, err);
     }
   }
-  plot.setTracks(state.tracks);
+  updatePlotTracks();
   render();
   persistSession();
 }
@@ -905,6 +937,11 @@ function wireUp() {
 
   $('btnAdvanced').onclick = () => setAdvanced(!state.advanced);
   $('btnLanguage').onclick = () => applyLanguage(language === 'zh' ? 'en' : 'zh');
+  $('btnPitchLock').onclick = () => {
+    state.pitchLocked = !state.pitchLocked;
+    updatePitchLockButton();
+    schedulePersistSession();
+  };
   $('btnHelp').onclick = () => { $('helpModal').hidden = false; };
   $('btnCloseHelp').onclick = () => { $('helpModal').hidden = true; };
   $('helpModal').onclick = (e) => { if (e.target === $('helpModal')) $('helpModal').hidden = true; };
@@ -917,9 +954,9 @@ function wireUp() {
 
   $('btnZoomIn').onclick = () => { plot.zoomTime(0.6); draw(); };
   $('btnZoomOut').onclick = () => { plot.zoomTime(1 / 0.6); draw(); };
-  $('btnPitchZoomIn').onclick = () => { plot.zoomPitch(0.7); draw(); };
-  $('btnPitchZoomOut').onclick = () => { plot.zoomPitch(1 / 0.7); draw(); };
-  $('btnFit').onclick = () => { plot.resetView(); draw(); };
+  $('btnPitchZoomIn').onclick = () => { if (allowPitchAdjustment()) { plot.zoomPitch(0.7); draw(); } };
+  $('btnPitchZoomOut').onclick = () => { if (allowPitchAdjustment()) { plot.zoomPitch(1 / 0.7); draw(); } };
+  $('btnFit').onclick = () => { if (allowPitchAdjustment()) { plot.resetView(); draw(); } };
   $('btnSetA').onclick = () => setLoopPoint('a');
   $('btnSetB').onclick = () => setLoopPoint('b');
   $('btnLoop').onclick = () => {
@@ -997,9 +1034,12 @@ function wirePlotPointer() {
         plot.view.t1 = dragging.t1 - dt;
         plot.clampTime();
         if (plot.mode === 'pitch') {
-          const semis = (dy / plot.plotRect.h) * (dragging.midiHi - dragging.midiLo);
-          plot.view.midiLo = dragging.midiLo + semis;
-          plot.view.midiHi = dragging.midiHi + semis;
+          if (Math.abs(dy) > 3 && dragging.pitchAllowed == null) dragging.pitchAllowed = allowPitchAdjustment();
+          if (dragging.pitchAllowed !== false) {
+            const semis = (dy / plot.plotRect.h) * (dragging.midiHi - dragging.midiLo);
+            plot.view.midiLo = dragging.midiLo + semis;
+            plot.view.midiHi = dragging.midiHi + semis;
+          }
         }
       } else if (dragging.kind === 'select') {
         const box = canvas.getBoundingClientRect();
@@ -1037,6 +1077,7 @@ function wirePlotPointer() {
       downAt: performance.now(),
       kind: e.button === 0 ? 'pan' : 'select',
       startX: px, startY: py,
+      pitchAllowed: null,
     };
     wrap.classList.add(e.button === 0 ? 'dragging' : 'selecting');
   });
@@ -1061,11 +1102,13 @@ function wirePlotPointer() {
         if (plot.mode === 'pitch') {
           const y0 = Math.max(r.y, Math.min(plot.selection.y0, plot.selection.y1));
           const y1 = Math.min(r.y + r.h, Math.max(plot.selection.y0, plot.selection.y1));
-          const v0 = plot.yToValue(y1);
-          const v1 = plot.yToValue(y0);
-          const padY = Math.max(0.5, (v1 - v0) * 0.05);
-          plot.view.midiLo = v0 - padY;
-          plot.view.midiHi = v1 + padY;
+          if (Math.abs(y1 - y0) > 3 && allowPitchAdjustment()) {
+            const v0 = plot.yToValue(y1);
+            const v1 = plot.yToValue(y0);
+            const padY = Math.max(0.5, (v1 - v0) * 0.05);
+            plot.view.midiLo = v0 - padY;
+            plot.view.midiHi = v1 + padY;
+          }
         }
         plot.clampTime();
       }
@@ -1091,9 +1134,9 @@ function wirePlotPointer() {
     const r = plot.plotRect;
     const ratio = Math.max(0, Math.min(1, (e.clientX - box.left - r.x) / r.w));
     if (e.altKey) {
-      plot.zoomPitch(e.deltaY > 0 ? 1.12 : 1 / 1.12);
+      if (allowPitchAdjustment()) plot.zoomPitch(e.deltaY > 0 ? 1.12 : 1 / 1.12);
     } else if (e.shiftKey) {
-      plot.panPitch(e.deltaY > 0 ? -1 : 1);
+      if (allowPitchAdjustment()) plot.panPitch(e.deltaY > 0 ? -1 : 1);
     } else if (e.ctrlKey || e.metaKey || Math.abs(e.deltaY) >= Math.abs(e.deltaX)) {
       plot.zoomTime(e.deltaY > 0 ? 1.12 : 1 / 1.12, ratio);
     } else {
@@ -1140,11 +1183,11 @@ function wireKeyboard() {
 
     if (e.ctrlKey) {
       switch (e.key) {
-        case 'ArrowUp': e.preventDefault(); plot.zoomPitch(0.7); draw(); break;
-        case 'ArrowDown': e.preventDefault(); plot.zoomPitch(1 / 0.7); draw(); break;
+        case 'ArrowUp': e.preventDefault(); if (allowPitchAdjustment()) plot.zoomPitch(0.7); draw(); break;
+        case 'ArrowDown': e.preventDefault(); if (allowPitchAdjustment()) plot.zoomPitch(1 / 0.7); draw(); break;
         case 'ArrowLeft': e.preventDefault(); plot.zoomTime(1.12); draw(); break;
         case 'ArrowRight': e.preventDefault(); plot.zoomTime(1 / 1.12); draw(); break;
-        case 'z': case 'Z': e.preventDefault(); plot.resetView(); draw(); break;
+        case 'z': case 'Z': e.preventDefault(); if (allowPitchAdjustment()) plot.resetView(); draw(); break;
         default: break;
       }
       return;
@@ -1158,8 +1201,8 @@ function wireKeyboard() {
         break;
       case 'ArrowLeft': e.preventDefault(); plot.panTime(-0.08 * big); draw(); break;
       case 'ArrowRight': e.preventDefault(); plot.panTime(0.08 * big); draw(); break;
-      case 'ArrowUp': e.preventDefault(); plot.panPitch(big); draw(); break;
-      case 'ArrowDown': e.preventDefault(); plot.panPitch(-big); draw(); break;
+      case 'ArrowUp': e.preventDefault(); if (allowPitchAdjustment()) plot.panPitch(big); draw(); break;
+      case 'ArrowDown': e.preventDefault(); if (allowPitchAdjustment()) plot.panPitch(-big); draw(); break;
       case '+': case '=': plot.zoomTime(0.6); draw(); break;
       case '-': case '_': plot.zoomTime(1 / 0.6); draw(); break;
       case '0': plot.autoRange(); draw(); break;

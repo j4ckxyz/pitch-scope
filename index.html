@@ -30,6 +30,7 @@
   <section class="plot-area">
     <div class="plot-wrap" id="plotWrap">
       <canvas id="plot"></canvas>
+      <button id="btnPitchLock" class="pitch-lock" type="button" aria-pressed="false" aria-label="锁定音高范围">✓</button>
 
       <div class="empty" id="empty">
         <div class="empty-inner">
@@ -75,11 +76,12 @@
       <label class="toggle"><input type="checkbox" id="chkTolerance" checked> <span id="chkToleranceText">音准范围</span> <kbd>T</kbd></label>
 
       <div class="zoom-group control-group" role="group" aria-label="缩放和还原">
-        <button id="btnZoomOut" class="btn btn-icon shortcut-btn" aria-label="缩小时间"><span>↔−</span><kbd>Ctrl+←</kbd></button>
-        <button id="btnZoomIn" class="btn btn-icon shortcut-btn" aria-label="放大时间"><span>↔+</span><kbd>Ctrl+→</kbd></button>
-        <button id="btnPitchZoomOut" class="btn btn-icon shortcut-btn" aria-label="缩小音高范围"><span>↕−</span><kbd>Ctrl+↑</kbd></button>
-        <button id="btnPitchZoomIn" class="btn btn-icon shortcut-btn" aria-label="放大音高范围"><span>↕+</span><kbd>Ctrl+↓</kbd></button>
-        <button id="btnFit" class="btn btn-icon btn-wide shortcut-btn" aria-label="还原默认视图"><span id="fitText">还原</span><kbd>Ctrl+Z</kbd></button>
+        <span class="shortcut-modifier" aria-hidden="true"><kbd>Ctrl</kbd></span>
+        <button id="btnZoomOut" class="btn btn-icon shortcut-btn" aria-label="缩小时间"><span>↔−</span><kbd>←</kbd></button>
+        <button id="btnZoomIn" class="btn btn-icon shortcut-btn" aria-label="放大时间"><span>↔+</span><kbd>→</kbd></button>
+        <button id="btnPitchZoomOut" class="btn btn-icon shortcut-btn" aria-label="缩小音高范围"><span>↕−</span><kbd>↑</kbd></button>
+        <button id="btnPitchZoomIn" class="btn btn-icon shortcut-btn" aria-label="放大音高范围"><span>↕+</span><kbd>↓</kbd></button>
+        <button id="btnFit" class="btn btn-icon btn-wide shortcut-btn" aria-label="还原默认视图"><span id="fitText">还原</span><kbd>Z</kbd></button>
       </div>
       <div class="loop-group control-group" id="loopGroup" role="group" aria-label="AB循环">
         <button id="btnSetA" class="btn btn-wide" disabled>设为 A</button>

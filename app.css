@@ -210,6 +210,29 @@ kbd {
   cursor: crosshair;
 }
 
+.pitch-lock {
+  position: absolute;
+  z-index: 3;
+  top: 7px;
+  left: 7px;
+  width: 28px;
+  height: 24px;
+  padding: 0;
+  color: var(--text-faint);
+  background: rgba(25, 28, 34, 0.9);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+  font: 14px/1 var(--mono);
+}
+
+.pitch-lock:hover { color: var(--text); border-color: #39404c; }
+.pitch-lock[aria-pressed="true"] {
+  color: #dce7f3;
+  background: #2b3f57;
+  border-color: #3a566f;
+}
+
 .plot-wrap.dragging #plot { cursor: grabbing; }
 .plot-wrap.selecting #plot { cursor: crosshair; }
 .plot-wrap.drop-active { outline: 2px dashed var(--track-a); outline-offset: -8px; }
@@ -389,6 +412,14 @@ kbd {
   font-size: 9px;
   padding: 2px 3px;
 }
+
+.shortcut-modifier {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 2px 0 1px;
+}
+
+.shortcut-modifier kbd { font-size: 10px; }
 
 .zoom-group, .loop-group { display: flex; }
 
