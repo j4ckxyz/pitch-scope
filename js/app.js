@@ -348,7 +348,6 @@ async function persistSession() {
     slot: track.slot,
     visible: track.visible,
     sourceData: track.sourceData,
-    result: serializeResult(track.result),
   }));
   try {
     await fetch('/api/session', {
@@ -381,11 +380,14 @@ async function restoreSession() {
     for (const savedTrack of saved.tracks) {
       const bytes = base64ToBytes(savedTrack.sourceData);
       const buffer = await ensureAudioCtx().decodeAudioData(bytes.buffer.slice(0));
+      const result = savedTrack.result
+        ? deserializeResult(savedTrack.result)
+        : await analyse(buffer);
       state.tracks.push({
         id: `${savedTrack.slot}-${Date.now()}-${Math.random()}`,
         name: savedTrack.name,
         buffer,
-        result: deserializeResult(savedTrack.result),
+        result,
         color: TRACK_COLORS[savedTrack.slot],
         visible: savedTrack.visible !== false,
         slot: savedTrack.slot,
