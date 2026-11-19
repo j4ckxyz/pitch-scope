@@ -9,7 +9,7 @@ let language = localStorage.getItem('pitchScopeLanguage') === 'en' ? 'en' : 'zh'
 
 const UI_TEXT = {
   zh: {
-    title: 'Pitch Scope：人声音高分析', languageButton: 'English', languageLabel: '切换语言', viewMode: '视图模式', loopGroup: 'AB循环', pitchLock: '锁定音高范围', pitchLocked: '音高范围已锁定', mixerTitle: '播放混音', leftTrack: '左声道音轨', leftVolume: '左声道音量', leftDelay: '左声道对齐偏移', rightTrack: '右声道音轨', rightVolume: '右声道音量', rightDelay: '右声道对齐偏移', align: '自动对齐两条音轨', fitButton: '还原', open: '打开人声', compare: '添加对比音轨', advanced: '高级',
+    title: 'Pitch Scope：人声音高分析', languageButton: 'English', languageLabel: '切换语言', viewMode: '视图模式', loopGroup: 'AB循环', pitchLock: '锁定音高范围', pitchLocked: '音高范围已锁定', mixerTitle: '播放混音', leftTrack: '左声道音轨', leftVolume: '左声道音量', leftDelay: '左声道对齐偏移', rightTrack: '右声道音轨', rightVolume: '右声道音量', rightDelay: '右声道对齐偏移', resetDelay: '还原对齐偏移', fitButton: '还原', open: '打开人声', compare: '添加对比音轨', advanced: '高级',
     emptyTitle: '拖入人声音轨以查看音准', emptyDescription: '人声唱出的每个音符都会显示在半音网格上。静音部分会留白。如果曲线几乎贴着网格线，这段录音可能经过了修音。', chooseFile: '选择音频文件',
     isolated: '请使用<strong>独立人声</strong>：人声音轨、清唱或独奏轨道。完整混音会优先识别最响的乐器，而不是歌手。', demo: '手边没有音轨？<button class="linkish" id="btnDemo">加载示例对比</button>查看同一句自然演唱与强制修音的差异。', privacy: '音频仅在当前浏览器中分析，不会上传。',
     pitch: '音高', deviation: '偏差（音分）', notes: '音符块', toleranceBand: '音准范围', sidebarEmpty: '加载人声后可查看音准报告。', settings: '分析设置', tolerance: '音准容差', minNote: '计入的最短音符', silence: '静音阈值', range: '人声范围', settingsNote: '修改后会重新分析已加载的音轨。',
@@ -18,7 +18,7 @@ const UI_TEXT = {
     helpKeys: { open: '打开人声音轨', compare: '添加对比音轨', play: '播放／暂停', time: '按时间平移（<kbd>⇧</kbd>加大步长）', pitch: '上下移动音高范围', zoom: '放大／缩小时间', fit: '还原默认视图', ctrlPitch: '缩小／放大音高范围', ctrlTime: '扩大／缩小时间范围', ctrlFit: '还原默认视图', loop: '设置循环起点和终点；AB 循环开始播放', leftKey: '左键', left: '拖动视图；短按定位播放条', middleKey: '中键', middle: '拖出矩形区域并放大到该区域', deviation: '切换音高／音分偏差视图', notes: '显示音符块', tolerance: '显示音准范围', tracks: '显示／隐藏音轨 1 或 2', advanced: '高级控制', help: '打开本说明' },
   },
   en: {
-    title: 'Pitch Scope: pitch-correction inspector for vocal stems', languageButton: '中文', languageLabel: 'Switch language', viewMode: 'View mode', loopGroup: 'AB loop', pitchLock: 'Lock pitch range', pitchLocked: 'Pitch range is locked', mixerTitle: 'Playback mixer', leftTrack: 'Left channel track', leftVolume: 'Left channel volume', leftDelay: 'Left alignment offset', rightTrack: 'Right channel track', rightVolume: 'Right channel volume', rightDelay: 'Right alignment offset', align: 'Auto-align two tracks', fitButton: 'Reset', open: 'Open vocal', compare: 'Add comparison', advanced: 'Advanced',
+    title: 'Pitch Scope: pitch-correction inspector for vocal stems', languageButton: '中文', languageLabel: 'Switch language', viewMode: 'View mode', loopGroup: 'AB loop', pitchLock: 'Lock pitch range', pitchLocked: 'Pitch range is locked', mixerTitle: 'Playback mixer', leftTrack: 'Left channel track', leftVolume: 'Left channel volume', leftDelay: 'Left alignment offset', rightTrack: 'Right channel track', rightVolume: 'Right channel volume', rightDelay: 'Right alignment offset', resetDelay: 'Reset alignment offset', fitButton: 'Reset', open: 'Open vocal', compare: 'Add comparison', advanced: 'Advanced',
     emptyTitle: 'Drop a vocal stem to see its tuning', emptyDescription: 'Every note the voice sings is plotted against the semitone grid. Silence is left blank. If the line sits dead on the gridlines, the take has probably been tuned.', chooseFile: 'Choose an audio file',
     isolated: 'Use an <strong>isolated vocal</strong>: a stem, an acapella, or a soloed track. A full mix will read the loudest instrument, not the singer.', demo: 'No stem to hand? <button class="linkish" id="btnDemo">Load an example pair</button> with the same phrase sung naturally and hard-tuned.', privacy: 'Audio is analysed in this browser. Nothing is uploaded.',
     pitch: 'Pitch', deviation: 'Cents off', notes: 'Note blocks', toleranceBand: 'In-tune band', sidebarEmpty: 'Load a vocal to see its tuning report.', settings: 'Analysis settings', tolerance: 'In-tune tolerance', minNote: 'Shortest note counted', silence: 'Silence threshold', range: 'Voice range', settingsNote: 'Changing these re-analyses the loaded tracks.',
@@ -69,7 +69,8 @@ function applyLanguage(next = language) {
   set('btnOpenA', 'open'); set('btnOpenB', 'compare'); set('btnAdvanced', 'advanced'); set('btnLanguage', 'languageButton');
   set('emptyTitle', 'emptyTitle'); set('emptyDescription', 'emptyDescription'); set('btnOpenEmpty', 'chooseFile'); set('emptyNoteIsolated', 'isolated', true); set('emptyNoteDemo', 'demo', true); set('emptyNotePrivacy', 'privacy');
   set('modePitchText', 'pitch'); set('modeDeviationText', 'deviation'); set('chkNotesText', 'notes'); set('chkToleranceText', 'toleranceBand'); set('sidebarEmptyText', 'sidebarEmpty'); set('settingsTitle', 'settings'); set('settingToleranceText', 'tolerance'); set('settingMinNoteText', 'minNote'); set('settingSilenceText', 'silence'); set('settingRangeText', 'range'); set('settingsNote', 'settingsNote'); set('disclaimerText', 'disclaimer'); set('helpTitle', 'help'); set('btnCloseHelp', 'close'); set('helpGraphTitle', 'graph'); set('helpGraphPitch', 'graphPitch', true); set('helpGraphDeviation', 'graphDeviation', true);
-  set('mixerTitle', 'mixerTitle'); set('mixerLeftLabel', 'leftTrack'); set('mixerLeftVolumeLabel', 'leftVolume'); set('mixerLeftDelayLabel', 'leftDelay'); set('mixerRightLabel', 'rightTrack'); set('mixerRightVolumeLabel', 'rightVolume'); set('mixerRightDelayLabel', 'rightDelay'); set('btnAlignTracks', 'align'); set('fitText', 'fitButton');
+  set('mixerTitle', 'mixerTitle'); set('mixerLeftLabel', 'leftTrack'); set('mixerLeftVolumeLabel', 'leftVolume'); set('mixerLeftDelayLabel', 'leftDelay'); set('mixerRightLabel', 'rightTrack'); set('mixerRightVolumeLabel', 'rightVolume'); set('mixerRightDelayLabel', 'rightDelay'); set('fitText', 'fitButton');
+  $('btnResetRightDelay').setAttribute('aria-label', text('resetDelay')); $('btnResetRightDelay').title = text('resetDelay');
   for (const node of document.querySelectorAll('[data-help-key]')) { const key = node.dataset.helpKey; if (text('helpKeys')[key]) node.innerHTML = text('helpKeys')[key]; }
   for (const option of document.querySelectorAll('[data-range-key]')) option.textContent = text('ranges')[option.dataset.rangeKey];
   if ($('btnDemo')) $('btnDemo').onclick = loadDemoPair;
@@ -501,58 +502,12 @@ function setMixerVolume(channel, value) {
 }
 
 function setMixerDelay(channel, value) {
-  state.mixer[`${channel}DelayMs`] = Number(value);
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return;
+  const clamped = Math.max(-5000, Math.min(5000, Math.round(parsed / 10) * 10));
+  state.mixer[`${channel}DelayMs`] = clamped;
   restartPlaybackAtCurrentTime();
   renderMixer();
-  schedulePersistSession();
-}
-
-function autoAlignTracks() {
-  const left = mixerTrack(state.mixer.leftSlot);
-  const right = mixerTrack(state.mixer.rightSlot);
-  if (!left || !right || left === right) return;
-  const a = left.buffer.getChannelData(0);
-  const b = right.buffer.getChannelData(0);
-  const sampleRate = left.buffer.sampleRate;
-  const lagLimit = Math.round(sampleRate * 5);
-  const lagStep = Math.max(1, Math.round(sampleRate * 0.01));
-  const sampleStep = Math.max(1, Math.round(sampleRate * 0.02));
-  const window = Math.min(a.length, b.length, Math.round(sampleRate * 20));
-  let bestLag = 0;
-  let bestScore = -Infinity;
-
-  for (let lag = -lagLimit; lag <= lagLimit; lag += lagStep) {
-    const startA = Math.max(0, lag);
-    const startB = Math.max(0, -lag);
-    const count = Math.min(window - startA, b.length - startB);
-    if (count < sampleRate) continue;
-    let sumA = 0;
-    let sumB = 0;
-    let sumAA = 0;
-    let sumBB = 0;
-    let sumAB = 0;
-    for (let offset = 0; offset < count; offset += sampleStep) {
-      const av = a[startA + offset];
-      const bv = b[startB + offset];
-      sumA += av;
-      sumB += bv;
-      sumAA += av * av;
-      sumBB += bv * bv;
-      sumAB += av * bv;
-    }
-    const n = Math.max(1, Math.floor(count / sampleStep));
-    const covariance = sumAB - (sumA * sumB) / n;
-    const variance = Math.sqrt((sumAA - (sumA * sumA) / n) * (sumBB - (sumB * sumB) / n));
-    const score = variance > 0 ? covariance / variance : -Infinity;
-    if (score > bestScore) {
-      bestScore = score;
-      bestLag = lag;
-    }
-  }
-
-  state.mixer.rightDelayMs = Math.round((-bestLag * 1000) / sampleRate / 10) * 10;
-  renderMixer();
-  restartPlaybackAtCurrentTime();
   schedulePersistSession();
 }
 
@@ -723,9 +678,6 @@ function renderMixer() {
   $('mixerRightDelay').value = state.mixer.rightDelayMs;
   $('mixerLeftVolumeOut').textContent = `${Math.round(state.mixer.leftGain * 100)}%`;
   $('mixerRightVolumeOut').textContent = `${Math.round(state.mixer.rightGain * 100)}%`;
-  $('mixerLeftDelayOut').textContent = `${state.mixer.leftDelayMs} ms`;
-  $('mixerRightDelayOut').textContent = `${state.mixer.rightDelayMs} ms`;
-  $('btnAlignTracks').disabled = state.tracks.length < 2;
 }
 
 function renderReports() {
@@ -1063,9 +1015,9 @@ function wireUp() {
   $('mixerRightTrack').onchange = (e) => setMixerTrack('right', e.target.value);
   $('mixerLeftVolume').oninput = (e) => setMixerVolume('left', e.target.value);
   $('mixerRightVolume').oninput = (e) => setMixerVolume('right', e.target.value);
-  $('mixerLeftDelay').oninput = (e) => setMixerDelay('left', e.target.value);
-  $('mixerRightDelay').oninput = (e) => setMixerDelay('right', e.target.value);
-  $('btnAlignTracks').onclick = autoAlignTracks;
+  $('mixerLeftDelay').onchange = (e) => setMixerDelay('left', e.target.value);
+  $('mixerRightDelay').onchange = (e) => setMixerDelay('right', e.target.value);
+  $('btnResetRightDelay').onclick = () => setMixerDelay('right', 0);
 
   // Settings: tolerance is display-only; the rest change the analysis.
   const tol = $('setTolerance');

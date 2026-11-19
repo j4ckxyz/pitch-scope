@@ -122,8 +122,8 @@
         <label class="field">
           <span id="mixerLeftDelayLabel">左声道对齐偏移</span>
           <span class="field-row">
-            <input type="range" id="mixerLeftDelay" min="-5000" max="5000" step="10" value="0">
-            <output id="mixerLeftDelayOut">0 ms</output>
+            <input class="delay-input" type="number" id="mixerLeftDelay" min="-5000" max="5000" step="10" value="0" inputmode="numeric">
+            <span class="unit-label">ms</span>
           </span>
         </label>
         <label class="field">
@@ -140,11 +140,11 @@
         <label class="field">
           <span id="mixerRightDelayLabel">右声道对齐偏移</span>
           <span class="field-row">
-            <input type="range" id="mixerRightDelay" min="-5000" max="5000" step="10" value="0">
-            <output id="mixerRightDelayOut">0 ms</output>
+            <input class="delay-input" type="number" id="mixerRightDelay" min="-5000" max="5000" step="10" value="0" inputmode="numeric">
+            <span class="unit-label">ms</span>
+            <button id="btnResetRightDelay" class="btn btn-icon btn-reset-delay" type="button" aria-label="还原右声道对齐偏移" title="还原为 0 ms">↺</button>
           </span>
         </label>
-        <button id="btnAlignTracks" class="btn" type="button">自动对齐两条音轨</button>
       </div>
     </details>
 

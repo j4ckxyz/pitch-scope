@@ -106,11 +106,10 @@ against another.
 Press <kbd>1</kbd> or <kbd>2</kbd> to show and hide either track.
 
 The playback mixer lets you choose any loaded track for the left and right
-channels, set their volumes independently, and adjust each channel's alignment
-offset in 10 ms steps. With two tracks loaded, the first track defaults to the
-left channel and the second to the right. **Auto-align two tracks** estimates
-the right-channel offset from the waveforms, after which the value can be tuned
-manually.
+channels, set their volumes independently, and enter each channel's alignment
+offset directly. Values range from −5000 to +5000 ms in 10 ms steps. With two
+tracks loaded, the first track defaults to the left channel and the second to
+the right. The right-channel reset button returns its offset to 0 ms.
 
 When started with `npm start`, the included server keeps loaded audio, analysis
 results, and mixer settings in memory for the current session. Reopening the
