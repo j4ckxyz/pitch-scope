@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Pitch Scope: pitch-correction inspector for vocal stems</title>
+<title>Pitch Scope：人声音高分析</title>
 <link rel="stylesheet" href="app.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='13'>🎚️</text></svg>">
 </head>
@@ -18,10 +18,11 @@
   <div class="tracks-strip" id="tracksStrip"></div>
 
   <div class="topbar-actions">
-    <button id="btnOpenA" class="btn btn-primary">Open vocal<kbd>O</kbd></button>
-    <button id="btnOpenB" class="btn adv-only">Add comparison<kbd>⇧O</kbd></button>
-    <button id="btnAdvanced" class="btn btn-ghost" aria-pressed="false">Advanced<kbd>X</kbd></button>
-    <button id="btnHelp" class="btn btn-ghost" aria-label="Keyboard shortcuts">?</button>
+    <button id="btnOpenA" class="btn btn-primary">打开人声<kbd>O</kbd></button>
+    <button id="btnOpenB" class="btn adv-only">添加对比音轨<kbd>⇧O</kbd></button>
+    <button id="btnAdvanced" class="btn btn-ghost" aria-pressed="false">高级<kbd>X</kbd></button>
+    <button id="btnLanguage" class="btn btn-ghost" aria-label="切换语言">English</button>
+    <button id="btnHelp" class="btn btn-ghost" aria-label="键盘快捷键">?</button>
   </div>
 </header>
 
@@ -29,27 +30,29 @@
   <section class="plot-area">
     <div class="plot-wrap" id="plotWrap">
       <canvas id="plot"></canvas>
+      <button id="btnPitchLock" class="pitch-lock" type="button" aria-pressed="false" aria-label="锁定音高范围">
+        <svg class="pitch-lock-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M7.5 10V7.5a4.5 4.5 0 0 1 9 0V10" />
+          <rect x="5" y="10" width="14" height="10" rx="2" />
+          <path class="pitch-lock-keyhole" d="M12 13.2a1.6 1.6 0 0 0-1 2.85V18h2v-1.95a1.6 1.6 0 0 0-1-2.85Z" />
+        </svg>
+      </button>
 
       <div class="empty" id="empty">
         <div class="empty-inner">
-          <h2>Drop a vocal stem to see its tuning</h2>
-          <p>
-            Every note the voice sings is plotted against the semitone grid.
-            Silence is left blank. If the line sits dead on the gridlines,
-            the take has probably been tuned.
+          <h2 id="emptyTitle">拖入人声音轨以查看音准</h2>
+          <p id="emptyDescription">
+            人声唱出的每个音符都会显示在半音网格上。静音部分会留白。如果曲线几乎贴着网格线，这段录音可能经过了修音。
           </p>
-          <button id="btnOpenEmpty" class="btn btn-primary btn-lg">Choose an audio file</button>
-          <p class="empty-note">
-            Use an <strong>isolated vocal</strong>: a stem, an acapella, or a solo'd
-            track. A full mix will read the loudest instrument, not the singer.
+          <button id="btnOpenEmpty" class="btn btn-primary btn-lg">选择音频文件</button>
+          <p class="empty-note" id="emptyNoteIsolated">
+            请使用<strong>独立人声</strong>：人声音轨、清唱或独奏轨道。完整混音会优先识别最响的乐器，而不是歌手。
           </p>
-          <p class="empty-note">
-            No stem to hand?
-            <button class="linkish" id="btnDemo">Load an example pair</button>
-            with the same phrase sung naturally and hard-tuned.
+          <p class="empty-note" id="emptyNoteDemo">
+            手边没有音轨？<button class="linkish" id="btnDemo">加载示例对比</button>查看同一句自然演唱与强制修音的差异。
           </p>
-          <p class="empty-note quiet">
-            Audio is analysed in this browser. Nothing is uploaded.
+          <p class="empty-note quiet" id="emptyNotePrivacy">
+            音频仅在当前浏览器中分析，不会上传。
           </p>
         </div>
       </div>
@@ -57,7 +60,7 @@
       <div class="readout" id="readout" hidden></div>
 
       <div class="progress" id="progress" hidden>
-        <div class="progress-label" id="progressLabel">Analysing…</div>
+        <div class="progress-label" id="progressLabel">正在分析…</div>
         <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
       </div>
     </div>
@@ -70,107 +73,159 @@
 
       <div class="spacer"></div>
 
-      <div class="seg" role="group" aria-label="View mode">
-        <button id="modePitch" class="seg-btn is-on">Pitch</button>
-        <button id="modeDeviation" class="seg-btn">Cents off<kbd>D</kbd></button>
+      <div class="seg" id="viewModeGroup" role="group" aria-label="视图模式">
+        <button id="modePitch" class="seg-btn is-on"><span id="modePitchText">音高</span></button>
+        <button id="modeDeviation" class="seg-btn"><span id="modeDeviationText">偏差（音分）</span><kbd>D</kbd></button>
       </div>
 
-      <label class="toggle adv-only"><input type="checkbox" id="chkNotes" checked> Note blocks <kbd>N</kbd></label>
-      <label class="toggle"><input type="checkbox" id="chkTolerance" checked> In-tune band <kbd>T</kbd></label>
+      <label class="toggle adv-only"><input type="checkbox" id="chkNotes" checked> <span id="chkNotesText">音符块</span> <kbd>N</kbd></label>
+      <label class="toggle"><input type="checkbox" id="chkTolerance" checked> <span id="chkToleranceText">音准范围</span> <kbd>T</kbd></label>
 
-      <div class="zoom-group">
-        <button id="btnZoomOut" class="btn btn-icon" aria-label="Zoom out">−</button>
-        <button id="btnZoomIn" class="btn btn-icon" aria-label="Zoom in">+</button>
-        <button id="btnFit" class="btn btn-icon btn-wide" aria-label="Fit whole track">Fit<kbd>0</kbd></button>
+      <div class="zoom-group control-group" role="group" aria-label="缩放和还原">
+        <span class="shortcut-modifier" aria-hidden="true"><kbd>Ctrl</kbd></span>
+        <button id="btnZoomOut" class="btn btn-icon shortcut-btn" aria-label="缩小时间"><span>↔−</span><kbd>←</kbd></button>
+        <button id="btnZoomIn" class="btn btn-icon shortcut-btn" aria-label="放大时间"><span>↔+</span><kbd>→</kbd></button>
+        <button id="btnPitchZoomOut" class="btn btn-icon shortcut-btn" aria-label="缩小音高范围"><span>↕−</span><kbd>↑</kbd></button>
+        <button id="btnPitchZoomIn" class="btn btn-icon shortcut-btn" aria-label="放大音高范围"><span>↕+</span><kbd>↓</kbd></button>
+        <button id="btnFit" class="btn btn-icon btn-wide shortcut-btn" aria-label="还原默认视图"><span id="fitText">还原</span><kbd>Z</kbd></button>
+      </div>
+      <div class="loop-group control-group" id="loopGroup" role="group" aria-label="AB循环">
+        <button id="btnSetA" class="btn btn-wide" disabled>设为 A</button>
+        <button id="btnSetB" class="btn btn-wide" disabled>设为 B</button>
+        <button id="btnLoop" class="btn btn-wide" aria-pressed="false" disabled>AB 循环</button>
+        <button id="btnClearLoop" class="btn btn-icon" aria-label="清除AB循环" disabled>×</button>
       </div>
     </div>
   </section>
 
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-empty" id="sidebarEmpty">
-      <p>Load a vocal to see its tuning report.</p>
+      <p id="sidebarEmptyText">加载人声后可查看音准报告。</p>
     </div>
     <div class="error-box" id="errorBox" hidden></div>
     <div id="reports"></div>
 
+    <details class="mixer" id="mixerBlock" hidden open>
+      <summary id="mixerTitle">播放混音</summary>
+      <div class="mixer-body">
+        <label class="field">
+          <span id="mixerLeftLabel">左声道音轨</span>
+          <select id="mixerLeftTrack"></select>
+        </label>
+        <label class="field">
+          <span id="mixerLeftVolumeLabel">左声道音量</span>
+          <span class="field-row">
+            <input type="range" id="mixerLeftVolume" min="0" max="100" step="1" value="100">
+            <output id="mixerLeftVolumeOut">100%</output>
+          </span>
+        </label>
+        <label class="field">
+          <span id="mixerLeftDelayLabel">左声道对齐偏移</span>
+          <span class="field-row">
+            <input class="delay-input" type="number" id="mixerLeftDelay" min="-5000" max="5000" step="10" value="0" inputmode="numeric">
+            <span class="unit-label">ms</span>
+          </span>
+        </label>
+        <label class="field">
+          <span id="mixerRightLabel">右声道音轨</span>
+          <select id="mixerRightTrack"></select>
+        </label>
+        <label class="field">
+          <span id="mixerRightVolumeLabel">右声道音量</span>
+          <span class="field-row">
+            <input type="range" id="mixerRightVolume" min="0" max="100" step="1" value="100">
+            <output id="mixerRightVolumeOut">100%</output>
+          </span>
+        </label>
+        <label class="field">
+          <span id="mixerRightDelayLabel">右声道对齐偏移</span>
+          <span class="field-row">
+            <input class="delay-input" type="number" id="mixerRightDelay" min="-5000" max="5000" step="10" value="0" inputmode="numeric">
+            <span class="unit-label">ms</span>
+            <button id="btnResetRightDelay" class="btn btn-icon btn-reset-delay" type="button" aria-label="还原右声道对齐偏移" title="还原为 0 ms">↺</button>
+          </span>
+        </label>
+      </div>
+    </details>
+
     <details class="settings adv-only" id="settingsBlock">
-      <summary>Analysis settings</summary>
+      <summary id="settingsTitle">分析设置</summary>
       <div class="settings-body">
         <label class="field">
-          <span>In-tune tolerance</span>
+          <span id="settingToleranceText">音准容差</span>
           <span class="field-row">
             <input type="range" id="setTolerance" min="3" max="25" step="1" value="10">
             <output id="outTolerance">±10¢</output>
           </span>
         </label>
         <label class="field">
-          <span>Shortest note counted</span>
+          <span id="settingMinNoteText">计入的最短音符</span>
           <span class="field-row">
             <input type="range" id="setMinNote" min="40" max="250" step="10" value="70">
             <output id="outMinNote">70 ms</output>
           </span>
         </label>
         <label class="field">
-          <span>Silence threshold</span>
+          <span id="settingSilenceText">静音阈值</span>
           <span class="field-row">
             <input type="range" id="setSilence" min="18" max="60" step="2" value="34">
             <output id="outSilence">−34 dB</output>
           </span>
         </label>
         <label class="field">
-          <span>Voice range</span>
+          <span id="settingRangeText">人声范围</span>
           <span class="field-row">
             <select id="setRange">
-              <option value="65,1100" selected>Full voice (C2–C6)</option>
-              <option value="65,400">Low / bass–baritone</option>
-              <option value="110,700">Mid / tenor–alto</option>
-              <option value="160,1100">High / soprano</option>
+              <option value="65,1100" selected data-range-key="full">完整范围（C2–C6）</option>
+              <option value="65,400" data-range-key="low">低音／男低音</option>
+              <option value="110,700" data-range-key="mid">中音／男高音至女低音</option>
+              <option value="160,1100" data-range-key="high">高音／女高音</option>
             </select>
           </span>
         </label>
-        <p class="settings-note">Changing these re-analyses the loaded tracks.</p>
+        <p class="settings-note" id="settingsNote">修改后会重新分析已加载的音轨。</p>
       </div>
     </details>
 
-    <p class="disclaimer">
-      These are statistical indicators, not proof. Tight tuning can mean pitch
-      correction, an exceptional singer, or a comped take. Treat a high score as
-      a reason to listen closely, not as a verdict.
+    <p class="disclaimer" id="disclaimerText">
+      这些是统计指标，不是结论。精准音准可能来自修音、优秀歌手或拼接录音。分数较高时请结合试听判断。
     </p>
   </aside>
 </main>
 
 <div class="modal" id="helpModal" hidden>
-  <div class="modal-card" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-label="键盘快捷键">
     <header>
-      <h2>Keyboard shortcuts</h2>
-      <button class="btn btn-ghost" id="btnCloseHelp" aria-label="Close">✕</button>
+      <h2 id="helpTitle">键盘快捷键</h2>
+      <button class="btn btn-ghost" id="btnCloseHelp" aria-label="关闭">✕</button>
     </header>
     <dl class="shortcuts">
-      <div><dt><kbd>O</kbd></dt><dd>Open a vocal track</dd></div>
-      <div><dt><kbd>⇧</kbd><kbd>O</kbd></dt><dd>Add a comparison track</dd></div>
-      <div><dt><kbd>space</kbd></dt><dd>Play / pause</dd></div>
-      <div><dt><kbd>←</kbd><kbd>→</kbd></dt><dd>Scroll through time (<kbd>⇧</kbd> for a bigger step)</dd></div>
-      <div><dt><kbd>↑</kbd><kbd>↓</kbd></dt><dd>Move the pitch range</dd></div>
-      <div><dt><kbd>+</kbd><kbd>−</kbd></dt><dd>Zoom in / out</dd></div>
-      <div><dt><kbd>0</kbd></dt><dd>Fit the whole track</dd></div>
-      <div><dt><kbd>D</kbd></dt><dd>Switch pitch view / cents-off view</dd></div>
-      <div><dt><kbd>N</kbd></dt><dd>Show note blocks</dd></div>
-      <div><dt><kbd>T</kbd></dt><dd>Show the in-tune band</dd></div>
-      <div><dt><kbd>1</kbd><kbd>2</kbd></dt><dd>Show / hide track 1 or 2</dd></div>
-      <div><dt><kbd>X</kbd></dt><dd>Advanced controls</dd></div>
-      <div><dt><kbd>?</kbd></dt><dd>This list</dd></div>
+      <div><dt><kbd>O</kbd></dt><dd data-help-key="open">打开人声音轨</dd></div>
+      <div><dt><kbd>⇧</kbd><kbd>O</kbd></dt><dd data-help-key="compare">添加对比音轨</dd></div>
+      <div><dt><kbd>space</kbd></dt><dd data-help-key="play">播放／暂停</dd></div>
+      <div><dt><kbd>←</kbd><kbd>→</kbd></dt><dd data-help-key="time">按时间平移（<kbd>⇧</kbd>加大步长）</dd></div>
+      <div><dt><kbd>↑</kbd><kbd>↓</kbd></dt><dd data-help-key="pitch">上下移动音高范围</dd></div>
+      <div><dt><kbd>+</kbd><kbd>−</kbd></dt><dd data-help-key="zoom">放大／缩小时间</dd></div>
+      <div><dt><kbd>0</kbd></dt><dd data-help-key="fit">还原默认视图</dd></div>
+      <div><dt><kbd>Ctrl</kbd><kbd>↑</kbd><kbd>↓</kbd></dt><dd data-help-key="ctrlPitch">缩小／放大音高范围</dd></div>
+      <div><dt><kbd>Ctrl</kbd><kbd>←</kbd><kbd>→</kbd></dt><dd data-help-key="ctrlTime">扩大／缩小时间范围</dd></div>
+      <div><dt><kbd>Ctrl</kbd><kbd>Z</kbd></dt><dd data-help-key="ctrlFit">还原默认视图</dd></div>
+      <div><dt>A / B</dt><dd data-help-key="loop">设置循环起点和终点；AB 循环开始播放</dd></div>
+      <div><dt data-help-key="leftKey">左键</dt><dd data-help-key="left">拖动视图；短按定位播放条</dd></div>
+      <div><dt data-help-key="middleKey">中键</dt><dd data-help-key="middle">拖出矩形区域并放大到该区域</dd></div>
+      <div><dt><kbd>D</kbd></dt><dd data-help-key="deviation">切换音高／音分偏差视图</dd></div>
+      <div><dt><kbd>N</kbd></dt><dd data-help-key="notes">显示音符块</dd></div>
+      <div><dt><kbd>T</kbd></dt><dd data-help-key="tolerance">显示音准范围</dd></div>
+      <div><dt><kbd>1</kbd><kbd>2</kbd></dt><dd data-help-key="tracks">显示／隐藏音轨 1 或 2</dd></div>
+      <div><dt><kbd>X</kbd></dt><dd data-help-key="advanced">高级控制</dd></div>
+      <div><dt><kbd>?</kbd></dt><dd data-help-key="help">打开本说明</dd></div>
     </dl>
-    <h3>Reading the graph</h3>
-    <p class="help-body">
-      In <strong>Pitch</strong> view each horizontal line is a semitone. A voice
-      normally weaves around those lines, scooping into notes, drifting, adding
-      vibrato. Pitch correction pulls the line flat onto the grid.
+    <h3 id="helpGraphTitle">如何阅读曲线</h3>
+    <p class="help-body" id="helpGraphPitch">
+      在<strong>音高</strong>视图中，每条水平线代表一个半音。自然人声通常会在网格线周围摆动、滑入音符并产生颤音；修音会让曲线贴近网格。
     </p>
-    <p class="help-body">
-      <strong>Cents off</strong> view subtracts the nearest note, so the whole
-      performance collapses onto one scale. A corrected take hugs the zero line;
-      an untreated one wanders across the full ±50 range.
+    <p class="help-body" id="helpGraphDeviation">
+      <strong>偏差（音分）</strong>视图会减去最近音符，让整段演唱落在同一音阶上。修音录音会贴近零线，未经处理的录音则会在 ±50 音分范围内变化。
     </p>
   </div>
 </div>

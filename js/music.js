@@ -207,16 +207,16 @@ export function analyseCorrection(time, midi, notes, opts = {}) {
   const quantisation = clamp01(invLerp(inTune, 0.55, 0.92));
 
   const components = [
-    { key: 'accuracy', label: 'Note centres on grid', score: accuracy,
-      detail: fmt(centreSd, 1) + ' cents spread across note centres' },
-    { key: 'steadiness', label: 'Pitch held still within notes', score: steadiness,
-      detail: fmt(medSpread, 1) + ' cents typical movement inside a note' },
-    { key: 'snap', label: 'Note-to-note transition speed', score: snap,
+    { key: 'accuracy', label: '音符中心贴近网格', score: accuracy,
+      detail: fmt(centreSd, 1) + ' 音分：音符中心离散度' },
+    { key: 'steadiness', label: '音符内部音高稳定度', score: steadiness,
+      detail: fmt(medSpread, 1) + ' 音分：音符内部典型变化' },
+    { key: 'snap', label: '音符间过渡速度', score: snap,
       detail: transitions.length >= 3
-        ? fmt(medTransition, 0) + ' ms to move a semitone at the fastest point'
-        : 'not enough note changes to judge' },
-    { key: 'quantisation', label: 'Time parked on exact pitches', score: quantisation,
-      detail: fmt(inTune * 100, 0) + '% of sung frames within 10 cents' },
+        ? fmt(medTransition, 0) + ' 毫秒：最快半音过渡时间'
+        : '音符变化不足，无法判断' },
+    { key: 'quantisation', label: '落在准确音高上的时间', score: quantisation,
+      detail: fmt(inTune * 100, 0) + '% 的演唱帧在 10 音分以内' },
   ];
 
   const weights = { accuracy: 0.34, steadiness: 0.3, snap: 0.18, quantisation: 0.18 };
@@ -313,23 +313,23 @@ export function centsHistogram(midi, bins = 50) {
 
 function verdictFor(score, noteCount) {
   if (noteCount < 8) {
-    return { label: 'Not enough material', tone: 'unknown',
-      text: 'Too few sustained notes to say anything useful. Try a longer passage.' };
+    return { label: '素材不足', tone: 'unknown',
+      text: '持续音符太少，无法得出有用结论。请尝试更长的片段。' };
   }
   if (score >= 0.78) {
-    return { label: 'Strong signs of pitch correction', tone: 'high',
-      text: 'Pitch sits on the grid more precisely, and more consistently, than an unprocessed voice normally does.' };
+    return { label: '有明显修音迹象', tone: 'high',
+      text: '音高比未经处理的人声更精准、更稳定地贴近网格。' };
   }
   if (score >= 0.58) {
-    return { label: 'Some signs of pitch correction', tone: 'mid',
-      text: 'Tuning is tighter than typical, but a very accurate singer can look like this. Compare against another take before drawing conclusions.' };
+    return { label: '有一定修音迹象', tone: 'mid',
+      text: '音准比通常情况更紧，但优秀歌手也可能呈现类似结果。请结合另一段录音比较。' };
   }
   if (score >= 0.35) {
-    return { label: 'Little sign of pitch correction', tone: 'low',
-      text: 'Pitch moves the way an unprocessed voice usually moves. Light, transparent correction would not necessarily show up here.' };
+    return { label: '修音迹象较少', tone: 'low',
+      text: '音高变化符合未经处理的人声特征。轻微、透明的修音不一定会在这里显现。' };
   }
-  return { label: 'No sign of pitch correction', tone: 'none',
-    text: 'Natural drift, scooping and vibrato are all present.' };
+  return { label: '没有明显修音迹象', tone: 'none',
+    text: '可以观察到自然漂移、滑音和颤音。' };
 }
 
 /* ---------- helpers ---------- */

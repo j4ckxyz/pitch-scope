@@ -60,6 +60,8 @@ export class PitchPlot {
     this.view = { t0: 0, t1: 10, midiLo: 48, midiHi: 72 };
     this.playhead = null;
     this.hover = null;
+    this.selection = null;
+    this.loop = null;
     this._dpr = 1;
   }
 
@@ -99,6 +101,10 @@ export class PitchPlot {
       midiHi: Math.ceil(hi + pad),
     };
     this.fullDuration = dur;
+  }
+
+  resetView() {
+    this.autoRange();
   }
 
   zoomTime(factor, anchorRatio = 0.5) {
@@ -230,7 +236,9 @@ export class PitchPlot {
     ctx.restore();
 
     this.drawPlayhead();
+    this.drawLoop();
     this.drawHover();
+    this.drawSelection();
   }
 
   /**
@@ -342,7 +350,7 @@ export class PitchPlot {
     ctx.translate(12, r.y + r.h / 2);
     ctx.rotate(-Math.PI / 2);
     ctx.textAlign = 'center';
-    ctx.fillText('cents off', 0, 0);
+    ctx.fillText('音分偏差', 0, 0);
     ctx.restore();
   }
 
@@ -442,6 +450,26 @@ export class PitchPlot {
     ctx.globalAlpha = 1;
   }
 
+  drawLoop() {
+    if (!this.loop || this.loop.a == null || this.loop.b == null) return;
+    const r = this.plotRect;
+    const ctx = this.ctx;
+    const xa = this.timeToX(this.loop.a);
+    const xb = this.timeToX(this.loop.b);
+    ctx.save();
+    ctx.fillStyle = this.loop.enabled ? 'rgba(111,158,114,0.08)' : 'rgba(148,156,171,0.05)';
+    ctx.fillRect(xa, r.y, xb - xa, r.h);
+    ctx.strokeStyle = this.loop.enabled ? '#6f9e72' : '#79818f';
+    ctx.setLineDash([4, 3]);
+    for (const x of [xa, xb]) {
+      ctx.beginPath();
+      ctx.moveTo(Math.round(x) + 0.5, r.y);
+      ctx.lineTo(Math.round(x) + 0.5, r.y + r.h);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
   drawHover() {
     if (!this.hover) return;
     const r = this.plotRect;
@@ -454,6 +482,19 @@ export class PitchPlot {
     ctx.moveTo(Math.round(x) + 0.5, r.y);
     ctx.lineTo(Math.round(x) + 0.5, r.y + r.h);
     ctx.stroke();
+  }
+
+  drawSelection() {
+    if (!this.selection) return;
+    const { x0, y0, x1, y1 } = this.selection;
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.fillStyle = 'rgba(74,144,217,0.12)';
+    ctx.strokeStyle = '#8bb9e8';
+    ctx.setLineDash([5, 4]);
+    ctx.fillRect(x0, y0, x1 - x0, y1 - y0);
+    ctx.strokeRect(x0 + 0.5, y0 + 0.5, x1 - x0, y1 - y0);
+    ctx.restore();
   }
 
   /** Nearest voiced sample of each visible track at time t, for the readout. */

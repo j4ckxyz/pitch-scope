@@ -6,7 +6,7 @@ import { hzToMidi, estimateTuning, segmentNotes, analyseCorrection } from './mus
 self.onmessage = (ev) => {
   const { id, channels, sampleRate, settings = {} } = ev.data;
   try {
-    post({ id, type: 'progress', stage: 'Preparing audio', value: 0.02 });
+    post({ id, type: 'progress', stage: '准备音频', value: 0.02 });
     const mono = resampleMono(channels, sampleRate, WORK_RATE);
 
     const raw = trackPitch(mono, WORK_RATE, {
@@ -14,10 +14,10 @@ self.onmessage = (ev) => {
       fMax: settings.fMax,
       silenceDropDb: settings.silenceDropDb,
       maxAperiodicity: settings.maxAperiodicity,
-      onProgress: (v) => post({ id, type: 'progress', stage: 'Tracking pitch', value: 0.05 + v * 0.85 }),
+      onProgress: (v) => post({ id, type: 'progress', stage: '跟踪音高', value: 0.05 + v * 0.85 }),
     });
 
-    post({ id, type: 'progress', stage: 'Reading notes', value: 0.92 });
+    post({ id, type: 'progress', stage: '读取音符', value: 0.92 });
     const f0 = cleanContour(raw.f0);
     const midiRaw = Float64Array.from(f0, (hz) => (isFinite(hz) ? hzToMidi(hz) : NaN));
 

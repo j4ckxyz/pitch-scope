@@ -1,5 +1,15 @@
 # Pitch Scope
 
+语言：**English** | [简体中文](README.zh-CN.md)
+
+## Recent additions
+
+The current development branch includes a Chinese and English interface with a
+language toggle, A/B loop playback, independent pitch-range zoom and pan,
+rectangle selection zoom, and separate left-, middle-, and right-button canvas
+behaviour. See
+[README.zh-CN.md](README.zh-CN.md) for the complete Chinese guide.
+
 A web tool for looking at the tuning of a vocal take. Load an isolated vocal and
 every note the singer sings is drawn against the semitone grid. Silence is left
 blank. Load a second vocal and both are drawn on the same graph in different
@@ -34,8 +44,7 @@ a stem of your own.
 
 ## Running it locally
 
-It is a static site with no build step and no dependencies, so any web server
-will do.
+It is a static site with no compile step and no dependencies.
 
 ```sh
 git clone https://github.com/j4ckxyz/pitch-scope.git
@@ -45,8 +54,8 @@ npm start
 
 Then open <http://localhost:8173>.
 
-`npm start` is only a shortcut for `python3 -m http.server 8173`. Any equivalent
-works, for example `npx serve` or `php -S localhost:8173`.
+`npm start` runs the small Node server included in this repository and listens
+on `127.0.0.1:8173`. You can also use `npx serve` or `php -S localhost:8173`.
 
 Opening `index.html` directly from your filesystem will **not** work. The
 analysis runs in a module Web Worker, and browsers only allow those over
@@ -96,6 +105,16 @@ against another.
 
 Press <kbd>1</kbd> or <kbd>2</kbd> to show and hide either track.
 
+The playback mixer lets you choose any loaded track for the left and right
+channels, set their volumes independently, and enter each channel's alignment
+offset directly. Values range from −5000 to +5000 ms in 10 ms steps. With two
+tracks loaded, the first track defaults to the left channel and the second to
+the right. The right-channel reset button returns its offset to 0 ms.
+
+When started with `npm start`, the included server keeps loaded audio, analysis
+results, and mixer settings in memory for the current session. Reopening the
+browser restores them while the server process is still running.
+
 ## Keyboard shortcuts
 
 | Key | Action |
@@ -107,6 +126,11 @@ Press <kbd>1</kbd> or <kbd>2</kbd> to show and hide either track.
 | <kbd>↑</kbd> <kbd>↓</kbd> | Move the pitch range up and down |
 | <kbd>+</kbd> <kbd>−</kbd> | Zoom in and out |
 | <kbd>0</kbd> | Fit the whole track |
+| <kbd>Ctrl</kbd>+<kbd>↑</kbd> | Zoom the pitch range out |
+| <kbd>Ctrl</kbd>+<kbd>↓</kbd> | Zoom the pitch range in |
+| <kbd>Ctrl</kbd>+<kbd>←</kbd> | Expand the time range |
+| <kbd>Ctrl</kbd>+<kbd>→</kbd> | Shrink the time range |
+| <kbd>Ctrl</kbd>+<kbd>Z</kbd> | Reset the view |
 | <kbd>D</kbd> | Switch between the pitch and cents-off views |
 | <kbd>N</kbd> | Show or hide note blocks |
 | <kbd>T</kbd> | Show or hide the in-tune band |
@@ -114,8 +138,9 @@ Press <kbd>1</kbd> or <kbd>2</kbd> to show and hide either track.
 | <kbd>X</kbd> | Advanced controls |
 | <kbd>?</kbd> | List the shortcuts |
 
-With the mouse: drag to pan, scroll to zoom, click to move the playhead, and
-hover to read the note and its offset in cents.
+With the mouse, use the left button to click and move the playhead or drag to
+pan. Use the middle button to drag a rectangle and zoom into that region. Scroll
+to zoom and hover to read the note and its offset in cents.
 
 ## The correction score
 
