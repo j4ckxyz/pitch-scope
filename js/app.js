@@ -111,6 +111,7 @@ let mixerNodes = [];
 let worker = null;
 let jobId = 0;
 const pending = new Map();
+const MAX_SESSION_AUDIO_BYTES = 32 * 1024 * 1024;
 
 /* ---------- worker ---------- */
 
@@ -174,7 +175,12 @@ async function loadFile(file, slot) {
     const arrayBuf = await file.arrayBuffer();
     const buffer = await decodeAudioFile(arrayBuf, file.name);
     const result = await analyse(buffer);
-    const sourceData = bytesToBase64(new Uint8Array(arrayBuf));
+    // Keep session persistence lightweight. Very large stems can be decoded and
+    // analysed normally, but converting them to Base64 would briefly duplicate
+    // the entire file and can exhaust the browser's memory.
+    const sourceData = arrayBuf.byteLength <= MAX_SESSION_AUDIO_BYTES
+      ? bytesToBase64(new Uint8Array(arrayBuf))
+      : null;
 
     const existing = state.tracks.findIndex((t) => t.slot === slot);
     const track = {
@@ -347,7 +353,7 @@ async function persistSession() {
     name: track.name,
     slot: track.slot,
     visible: track.visible,
-    sourceData: track.sourceData,
+    ...(track.sourceData ? { sourceData: track.sourceData } : {}),
   }));
   try {
     await fetch('/api/session', {
@@ -378,6 +384,7 @@ async function restoreSession() {
     if (saved.mixer) state.mixer = { ...state.mixer, ...saved.mixer };
     state.pitchLocked = saved.pitchLocked === true;
     for (const savedTrack of saved.tracks) {
+      if (!savedTrack.sourceData) continue;
       const bytes = base64ToBytes(savedTrack.sourceData);
       const buffer = await decodeAudioFile(bytes.buffer.slice(0), savedTrack.name);
       const result = savedTrack.result
