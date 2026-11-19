@@ -379,7 +379,7 @@ async function restoreSession() {
     state.pitchLocked = saved.pitchLocked === true;
     for (const savedTrack of saved.tracks) {
       const bytes = base64ToBytes(savedTrack.sourceData);
-      const buffer = await ensureAudioCtx().decodeAudioData(bytes.buffer.slice(0));
+      const buffer = await decodeAudioFile(bytes.buffer.slice(0), savedTrack.name);
       const result = savedTrack.result
         ? deserializeResult(savedTrack.result)
         : await analyse(buffer);
