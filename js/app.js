@@ -172,9 +172,9 @@ async function loadFile(file, slot) {
   showProgress('正在解码音频', 0.01);
   try {
     const arrayBuf = await file.arrayBuffer();
-    const sourceData = bytesToBase64(new Uint8Array(arrayBuf.slice(0)));
-    const buffer = await ensureAudioCtx().decodeAudioData(arrayBuf);
+    const buffer = await decodeAudioFile(arrayBuf, file.name);
     const result = await analyse(buffer);
+    const sourceData = bytesToBase64(new Uint8Array(arrayBuf));
 
     const existing = state.tracks.findIndex((t) => t.slot === slot);
     const track = {
@@ -201,6 +201,88 @@ async function loadFile(file, slot) {
     hideProgress();
     reportError(file.name, err);
   }
+}
+
+async function decodeAudioFile(arrayBuf, fileName = '') {
+  const context = ensureAudioCtx();
+  try {
+    // Some Chromium builds detach the supplied buffer during decoding. Always
+    // pass a copy so the original bytes remain available for session restore.
+    return await context.decodeAudioData(arrayBuf.slice(0));
+  } catch (decodeError) {
+    if (!/\.wav$/i.test(fileName) && !isWavBuffer(arrayBuf)) throw decodeError;
+    const wav = parsePcmWav(arrayBuf);
+    const buffer = context.createBuffer(wav.channels.length, wav.frameCount, wav.sampleRate);
+    wav.channels.forEach((channel, index) => buffer.copyToChannel(channel, index));
+    return buffer;
+  }
+}
+
+function isWavBuffer(arrayBuf) {
+  if (arrayBuf.byteLength < 12) return false;
+  const bytes = new Uint8Array(arrayBuf, 0, 12);
+  return ascii(bytes, 0, 4) === 'RIFF' && ascii(bytes, 8, 4) === 'WAVE';
+}
+
+function parsePcmWav(arrayBuf) {
+  const view = new DataView(arrayBuf);
+  if (!isWavBuffer(arrayBuf)) throw new Error('Unsupported WAV container');
+  let offset = 12;
+  let format = null;
+  let dataStart = -1;
+  let dataSize = 0;
+  while (offset + 8 <= view.byteLength) {
+    const id = ascii(new Uint8Array(arrayBuf), offset, 4);
+    const size = view.getUint32(offset + 4, true);
+    const start = offset + 8;
+    if (start > view.byteLength) break;
+    if (id === 'fmt ' && size >= 16) {
+      const tag = view.getUint16(start, true);
+      format = {
+        tag: tag === 0xfffe && size >= 40 ? view.getUint16(start + 24, true) : tag,
+        channels: view.getUint16(start + 2, true),
+        sampleRate: view.getUint32(start + 4, true),
+        blockAlign: view.getUint16(start + 12, true),
+        bits: view.getUint16(start + 14, true),
+      };
+    } else if (id === 'data' && dataStart < 0) {
+      dataStart = start;
+      dataSize = Math.min(size, view.byteLength - start);
+    }
+    offset = start + size + (size & 1);
+  }
+  if (!format || dataStart < 0 || !format.channels || !format.sampleRate || !format.blockAlign) {
+    throw new Error('WAV file is missing audio data');
+  }
+  if (![1, 3].includes(format.tag) || ![8, 16, 24, 32].includes(format.bits)) {
+    throw new Error('This WAV encoding is not supported by the fallback decoder');
+  }
+  const frameCount = Math.floor(dataSize / format.blockAlign);
+  const channels = Array.from({ length: format.channels }, () => new Float32Array(frameCount));
+  const bytesPerSample = format.bits / 8;
+  for (let frame = 0; frame < frameCount; frame++) {
+    for (let channel = 0; channel < format.channels; channel++) {
+      const position = dataStart + frame * format.blockAlign + channel * bytesPerSample;
+      channels[channel][frame] = readWavSample(view, position, format.bits, format.tag === 3);
+    }
+  }
+  return { channels, frameCount, sampleRate: format.sampleRate };
+}
+
+function readWavSample(view, offset, bits, isFloat) {
+  if (isFloat && bits === 32) return view.getFloat32(offset, true);
+  if (bits === 8) return (view.getUint8(offset) - 128) / 128;
+  if (bits === 16) return view.getInt16(offset, true) / 32768;
+  if (bits === 24) {
+    let value = view.getUint8(offset) | (view.getUint8(offset + 1) << 8) | (view.getUint8(offset + 2) << 16);
+    if (value & 0x800000) value |= 0xff000000;
+    return value / 8388608;
+  }
+  return view.getInt32(offset, true) / 2147483648;
+}
+
+function ascii(bytes, offset, length) {
+  return String.fromCharCode(...bytes.subarray(offset, offset + length));
 }
 
 function updatePlotTracks() {

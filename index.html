@@ -30,7 +30,13 @@
   <section class="plot-area">
     <div class="plot-wrap" id="plotWrap">
       <canvas id="plot"></canvas>
-      <button id="btnPitchLock" class="pitch-lock" type="button" aria-pressed="false" aria-label="锁定音高范围">✓</button>
+      <button id="btnPitchLock" class="pitch-lock" type="button" aria-pressed="false" aria-label="锁定音高范围">
+        <svg class="pitch-lock-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M7.5 10V7.5a4.5 4.5 0 0 1 9 0V10" />
+          <rect x="5" y="10" width="14" height="10" rx="2" />
+          <path class="pitch-lock-keyhole" d="M12 13.2a1.6 1.6 0 0 0-1 2.85V18h2v-1.95a1.6 1.6 0 0 0-1-2.85Z" />
+        </svg>
+      </button>
 
       <div class="empty" id="empty">
         <div class="empty-inner">

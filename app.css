@@ -223,7 +223,9 @@ kbd {
   border: 1px solid var(--border);
   border-radius: 4px;
   cursor: pointer;
-  font: 14px/1 var(--mono);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .pitch-lock:hover { color: var(--text); border-color: #39404c; }
@@ -232,6 +234,18 @@ kbd {
   background: #2b3f57;
   border-color: #3a566f;
 }
+
+.pitch-lock-icon {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.pitch-lock-keyhole { fill: currentColor; stroke: none; }
 
 .plot-wrap.dragging #plot { cursor: grabbing; }
 .plot-wrap.selecting #plot { cursor: crosshair; }
